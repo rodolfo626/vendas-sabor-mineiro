@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendas Sabor Mineiro</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #D4451A;
+    --primary-dark: #A83515;
+    --accent: #F5A623;
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --text: #2D2D2D;
+    --text-light: #777;
+    --success: #2ECC71;
+    --border: #E8DDD0;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 18px 20px;
+    text-align: center;
+    box-shadow: 0 3px 15px rgba(212,69,26,0.3);
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
+  header h1 span { color: var(--accent); }
+  header p { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+
+  .container { max-width: 500px; margin: 0 auto; padding: 16px; }
+
+  /* NAV TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+  .tabs button {
+    flex: 1; padding: 10px 8px; border: 2px solid var(--border);
+    background: var(--card); border-radius: 10px; font-size: 0.82rem;
+    font-weight: 600; color: var(--text-light); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tabs button.active {
+    border-color: var(--primary); color: var(--primary);
+    background: #FFF0EA;
+  }
+  .tabs button:hover { border-color: var(--primary); }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border-radius: 14px; padding: 20px;
+    box-shadow: var(--shadow); margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1.05rem; margin-bottom: 14px; color: var(--primary);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* FORM */
+  label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+  input, select, textarea {
+    width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+    border-radius: 10px; font-size: 0.95rem; background: #FAFAFA;
+    transition: border-color 0.2s; outline: none;
+    font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; }
+  textarea { resize: vertical; min-height: 60px; }
+  .form-group { margin-bottom: 14px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 11px 20px; border: none; border-radius: 10px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; width: 100%;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-secondary { background: var(--accent); color: white; }
+  .btn-secondary:hover { background: #E09510; }
+  .btn-outline {
+    background: transparent; border: 2px solid var(--primary);
+    color: var(--primary);
+  }
+  .btn-outline:hover { background: #FFF0EA; }
+  .btn-sm { padding: 8px 14px; font-size: 0.8rem; width: auto; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #27AE60; }
+  .btn-danger { background: #E74C3C; color: white; font-size: 0.75rem; padding: 6px 10px; width: auto; }
+  .btn-danger:hover { background: #C0392B; }
+
+  /* TOTAL PANEL */
+  .total-panel {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white; border-radius: 14px; padding: 20px;
+    text-align: center; margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(212,69,26,0.25);
+  }
+  .total-panel .label { font-size: 0.85rem; opacity: 0.9; }
+  .total-panel .value { font-size: 2.2rem; font-weight: 800; margin-top: 4px; }
+
+  /* PAYMENT TYPE */
+  .payment-options { display: flex; gap: 10px; margin-top: 6px; }
+  .payment-option {
+    flex: 1; padding: 14px; border: 2px solid var(--border);
+    border-radius: 12px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: #FAFAFA;
+  }
+  .payment-option.selected {
+    border-color: var(--primary); background: #FFF0EA;
+  }
+  .payment-option .icon { font-size: 1.5rem; margin-bottom: 4px; }
+  .payment-option .text { font-size: 0.82rem; font-weight: 600; }
+
+  /* HISTORY */
+  .history-item {
+    padding: 14px; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 10px; background: #FAFAFA;
+  }
+  .history-item .h-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .history-item .h-client { font-weight: 700; font-size: 0.95rem; }
+  .history-item .h-total { font-weight: 700; color: var(--primary); font-size: 1rem; }
+  .history-item .h-details { font-size: 0.8rem; color: var(--text-light); }
+  .history-item .h-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 0.7rem; font-weight: 700; margin-top: 6px;
+  }
+  .badge-vista { background: #D5F5E3; color: #1E8449; }
+  .badge-prazo { background: #FDEBD0; color: #B9770E; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    justify-content: center; align-items: flex-end;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: white; border-radius: 18px 18px 0 0; padding: 24px 20px;
+    width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal h3 { font-size: 1.1rem; margin-bottom: 16px; color: var(--primary); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn { flex: 1; }
+
+  /* SELECT HEADER */
+  .select-row { display: flex; gap: 8px; align-items: flex-end; }
+  .select-row .form-group { flex: 1; margin-bottom: 0; }
+  .select-row .btn { width: auto; height: 44px; min-width: 44px; padding: 0; font-size: 1.3rem; border-radius: 10px; margin-bottom: 0; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 30px; color: var(--text-light); }
+  .empty .icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .empty p { font-size: 0.9rem; }
+
+  /* LIST */
+  .list-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; background: #FAFAFA;
+  }
+  .list-item .li-info { flex: 1; }
+  .list-item .li-name { font-weight: 600; font-size: 0.9rem; }
+  .list-item .li-sub { font-size: 0.8rem; color: var(--text-light); }
+  .list-item .li-actions { display: flex; gap: 6px; }
+
+  /* CLIENT HISTORY */
+  .client-card {
+    border: 2px solid var(--border); border-radius: 12px; padding: 14px;
+    margin-bottom: 12px; background: white;
+  }
+  .client-card h3 { font-size: 1rem; color: var(--primary); margin-bottom: 4px; cursor: pointer; }
+  .client-card .c-info { font-size: 0.8rem; color: var(--text-light); margin-bottom: 8px; }
+  .client-card .c-stats {
+    display: flex; gap: 12px; margin-bottom: 8px;
+  }
+  .client-card .c-stat {
+    background: #FFF0EA; padding: 6px 12px; border-radius: 8px;
+    font-size: 0.78rem; font-weight: 600; color: var(--primary);
+  }
+
+  .hidden { display: none !important; }
+
+  /* QUANTITY ROW */
+  .qty-row { display: flex; gap: 8px; align-items: center; }
+  .qty-row input { text-align: center; }
+  .qty-btn {
+    width: 44px; height: 44px; border: 2px solid var(--border);
+    border-radius: 10px; background: white; font-size: 1.3rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .qty-btn:hover { border-color: var(--primary); background: #FFF0EA; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: white; padding: 12px 24px; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 600; z-index: 300;
+    animation: toastIn 0.3s ease;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* PRODUCT IN SALE */
+  .sale-product-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; background: #FFF8F0; border-radius: 10px;
+    margin-bottom: 8px; border: 1px solid var(--border);
+  }
+  .sale-product-row .spr-info { flex: 1; }
+  .sale-product-row .spr-name { font-weight: 600; font-size: 0.88rem; }
+  .sale-product-row .spr-sub { font-size: 0.78rem; color: var(--text-light); }
+  .sale-product-row .spr-total { font-weight: 700; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧀 Vendas <span>Sabor Mineiro</span></h1>
+  <p>Sistema de vendas</p>
+</header>
+
+<div class="container">
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="active" onclick="showTab('venda')">🛒 Venda</button>
+    <button onclick="showTab('historico')">📋 Histórico</button>
+    <button onclick="showTab('clientes')">👥 Clientes</button>
+    <button onclick="showTab('produtos')">📦 Produtos</button>
+  </div>
+
+  <!-- TAB: VENDA -->
+  <div id="tab-venda">
+    <div class="card">
+      <h2>📦 Produto</h2>
+      <div class="select-row">
+        <div class="form-group">
+          <label>Selecione o produto</label>
+          <select id="sel-produto" onchange="updateTotal()">
+            <option value="">-- Escolha um produto --</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-produto')" title="Cadastrar novo produto">＋</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔢 Quantidade</h2>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <input type="number" id="inp-quantidade" value="1" min="1" onchange="updateTotal()" oninput="updateTotal()">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>👤 Cliente</h2>
+      <div class="select-row">
+        <div class="form-group">
+          <label>Selecione o cliente</label>
+          <select id="sel-cliente">
+            <option value="">-- Escolha um cliente --</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-cliente')" title="Cadastrar novo cliente">＋</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💳 Forma de Pagamento</h2>
+      <div class="payment-options">
+        <div class="payment-option selected" onclick="selectPayment('avista', this)">
+          <div class="icon">💵</div>
+          <div class="text">À Vista</div>
+        </div>
+        <div class="payment-option" onclick="selectPayment('aprazo', this)">
+          <div class="icon">📅</div>
+          <div class="text">A Prazo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="total-panel">
+      <div class="label">Valor Total</div>
+      <div class="value" id="total-valor">R$ 0,00</div>
+    </div>
+
+    <button class="btn btn-success" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+  </div>
+
+  <!-- TAB: HISTÓRICO -->
+  <div id="tab-historico" class="hidden">
+    <div class="card">
+      <h2>📊 Resumo Financeiro</h2>
+      <div id="financeiro-resumo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div style="background: #E8F8F5; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #D1F2EB;">
+          <div style="font-size: 0.7rem; color: #1E8449; font-weight: 700;">TOTAL À VISTA</div>
+          <div id="resumo-avista" style="font-size: 1.1rem; font-weight: 800; color: #1E8449;">R$ 0,00</div>
+        </div>
+        <div style="background: #FEF5E7; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #FAD7A0;">
+          <div style="font-size: 0.7rem; color: #B9770E; font-weight: 700;">TOTAL A PRAZO</div>
+          <div id="resumo-aprazo" style="font-size: 1.1rem; font-weight: 800; color: #B9770E;">R$ 0,00</div>
+        </div>
+      </div>
+      <h2>📋 Histórico de Vendas</h2>
+      <div id="lista-historico">
+        <div class="empty">
+          <div class="icon">📭</div>
+          <p>Nenhuma venda registrada ainda</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CLIENTES -->
+  <div id="tab-clientes" class="hidden">
+    <div class="card">
+      <h2>👥 Clientes Cadastrados</h2>
+      <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:14px;" onclick="openModal('modal-cliente')">＋ Cadastrar Cliente</button>
+      <div id="lista-clientes">
+        <div class="empty">
+          <div class="icon">👤</div>
+          <p>Nenhum cliente cadastrado</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico por cliente -->
+    <div class="card">
+      <h2>📊 Histórico por Cliente</h2>
+      <div id="historico-clientes">
+        <div class="empty">
+          <div class="icon">📊</div>
+          <p>Selecione um cliente acima para ver o histórico</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PRODUTOS -->
+  <div id="tab-produtos" class="hidden">
+    <div class="card">
+      <h2>📦 Produtos Cadastrados</h2>
+      <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:14px;" onclick="openModal('modal-produto')">＋ Cadastrar Produto</button>
+      <div id="lista-produtos">
+        <div class="empty">
+          <div class="icon">📦</div>
+          <p>Nenhum produto cadastrado</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO PRODUTO -->
+<div class="modal-overlay" id="modal-produto">
+  <div class="modal">
+    <h3>📦 Cadastrar Produto</h3>
+    <div class="form-group">
+      <label>Nome do produto</label>
+      <input type="text" id="prod-nome" placeholder="Ex: Queijo Minas Frescal">
+    </div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea id="prod-descricao" placeholder="Descrição do produto..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Valor unitário (R$)</label>
+      <input type="number" id="prod-valor" placeholder="0,00" step="0.01" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <h3>👤 Cadastrar Cliente</h3>
+    <div class="form-group">
+      <label>Nome completo</label>
+      <input type="text" id="cli-nome" placeholder="Nome do cliente">
+    </div>
+    <div class="form-group">
+      <label>Telefone</label>
+      <input type="tel" id="cli-telefone" placeholder="(00) 00000-0000">
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="cli-endereco" placeholder="Endereço completo">
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <textarea id="cli-obs" placeholder="Observações sobre o cliente..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HISTÓRICO DO CLIENTE -->
+<div class="modal-overlay" id="modal-hist-cliente">
+  <div class="modal">
+    <h3 id="hist-cli-titulo">📊 Histórico do Cliente</h3>
+    <div id="hist-cli-conteudo"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-hist-cliente')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== DATA STORE ==========
+function getData(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  catch { return []; }
+}
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+let produtos = getData('vsm_produtos');
+let clientes = getData('vsm_clientes');
+let vendas = getData('vsm_vendas');
+let pagamentoSelecionado = 'avista';
+
+// ========== INIT ==========
+function init() {
+  renderProdutosSelect();
+  renderClientesSelect();
+  renderListaProdutos();
+  renderListaClientes();
+  renderHistorico();
+}
+
+// ========== TABS ==========
+function showTab(tab) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'historico') renderHistorico();
+  if (tab === 'clientes') { renderListaClientes(); renderHistoricoClientes(); }
+  if (tab === 'produtos') renderListaProdutos();
+}
+
+// ========== MODALS ==========
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// close modal clicking overlay
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+});
+
+// ========== PRODUTOS ==========
+function salvarProduto() {
+  const nome = document.getElementById('prod-nome').value.trim();
+  const desc = document.getElementById('prod-descricao').value.trim();
+  const valor = parseFloat(document.getElementById('prod-valor').value);
+  if (!nome) return toast('Informe o nome do produto');
+  if (!valor || valor <= 0) return toast('Informe um valor válido');
+
+  produtos.push({
+    id: Date.now().toString(),
+    nome, descricao: desc, valor,
+    criadoEm: new Date().toISOString()
+  });
+  setData('vsm_produtos', produtos);
+
+  document.getElementById('prod-nome').value = '';
+  document.getElementById('prod-descricao').value = '';
+  document.getElementById('prod-valor').value = '';
+  closeModal('modal-produto');
+  renderProdutosSelect();
+  renderListaProdutos();
+  toast('Produto cadastrado! ✅');
+}
+
+function excluirProduto(id) {
+  if (!confirm('Excluir este produto?')) return;
+  produtos = produtos.filter(p => p.id !== id);
+  setData('vsm_produtos', produtos);
+  renderProdutosSelect();
+  renderListaProdutos();
+  toast('Produto excluído');
+}
+
+function renderProdutosSelect() {
+  const sel = document.getElementById('sel-produto');
+  sel.innerHTML = '<option value="">-- Escolha um produto --</option>';
+  produtos.forEach(p => {
+    sel.innerHTML += `<option value="${p.id}">${p.nome} — R$ ${p.valor.toFixed(2).replace('.', ',')}</option>`;
+  });
+}
+
+function renderListaProdutos() {
+  const container = document.getElementById('lista-produtos');
+  if (!produtos.length) {
+    container.innerHTML = '<div class="empty"><div class="icon">📦</div><p>Nenhum produto cadastrado</p></div>';
+    return;
+  }
+  container.innerHTML = produtos.map(p => `
+    <div class="list-item">
+      <div class="li-info">
+        <div class="li-name">${p.nome}</div>
+        <div class="li-sub">${p.descricao || 'Sem descrição'} — R$ ${p.valor.toFixed(2).replace('.', ',')}</div>
+      </div>
+      <div class="li-actions">
+        <button class="btn btn-danger" onclick="excluirProduto('${p.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== CLIENTES ==========
+function salvarCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  const tel = document.getElementById('cli-telefone').value.trim();
+  const end = document.getElementById('cli-endereco').value.trim();
+  const obs = document.getElementById('cli-obs').value.trim();
+  if (!nome) return toast('Informe o nome do cliente');
+
+  clientes.push({
+    id: Date.now().toString(),
+    nome, telefone: tel, endereco: end, observacoes: obs,
+    criadoEm: new Date().toISOString()
+  });
+  setData('vsm_clientes', clientes);
+
+  document.getElementById('cli-nome').value = '';
+  document.getElementById('cli-telefone').value = '';
+  document.getElementById('cli-endereco').value = '';
+  document.getElementById('cli-obs').value = '';
+  closeModal('modal-cliente');
+  renderClientesSelect();
+  renderListaClientes();
+  toast('Cliente cadastrado! ✅');
+}
+
+function excluirCliente(id) {
+  if (!confirm('Excluir este cliente?')) return;
+  clientes = clientes.filter(c => c.id !== id);
+  setData('vsm_clientes', clientes);
+  renderClientesSelect();
+  renderListaClientes();
+  toast('Cliente excluído');
+}
+
+function renderClientesSelect() {
+  const sel = document.getElementById('sel-cliente');
+  sel.innerHTML = '<option value="">-- Escolha um cliente --</option>';
+  clientes.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+  });
+}
+
+function renderListaClientes() {
+  const container = document.getElementById('lista-clientes');
+  if (!clientes.length) {
+    container.innerHTML = '<div class="empty"><div class="icon">👤</div><p>Nenhum cliente cadastrado</p></div>';
+    return;
+  }
+  container.innerHTML = clientes.map(c => `
+    <div class="list-item">
+      <div class="li-info">
+        <div class="li-name">${c.nome}</div>
+        <div class="li-sub">${c.telefone || 'Sem telefone'} ${c.endereco ? '• ' + c.endereco : ''}</div>
+      </div>
+      <div class="li-actions">
+        <button class="btn btn-outline btn-sm" onclick="verHistoricoCliente('${c.id}')">📊</button>
+        <button class="btn btn-danger" onclick="excluirCliente('${c.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== PAGAMENTO ==========
+function selectPayment(tipo, el) {
+  pagamentoSelecionado = tipo;
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ========== QUANTIDADE ==========
+function changeQty(delta) {
+  const inp = document.getElementById('inp-quantidade');
+  let val = parseInt(inp.value) || 1;
+  val = Math.max(1, val + delta);
+  inp.value = val;
+  updateTotal();
+}
+
+// ========== TOTAL ==========
+function updateTotal() {
+  const prodId = document.getElementById('sel-produto').value;
+  const qty = parseInt(document.getElementById('inp-quantidade').value) || 0;
+  const prod = produtos.find(p => p.id === prodId);
+  const total = prod ? prod.valor * qty : 0;
+  document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+// ========== FINALIZAR VENDA ==========
+function finalizarVenda() {
+  const prodId = document.getElementById('sel-produto').value;
+  const qty = parseInt(document.getElementById('inp-quantidade').value) || 0;
+  const clienteId = document.getElementById('sel-cliente').value;
+
+  if (!prodId) return toast('Selecione um produto');
+  if (qty < 1) return toast('Informe a quantidade');
+  if (!clienteId) return toast('Selecione um cliente');
+
+  const prod = produtos.find(p => p.id === prodId);
+  const cliente = clientes.find(c => c.id === clienteId);
+  const total = prod.valor * qty;
+
+  vendas.push({
+    id: Date.now().toString(),
+    produtoId: prodId,
+    produtoNome: prod.nome,
+    valorUnitario: prod.valor,
+    quantidade: qty,
+    clienteId: clienteId,
+    clienteNome: cliente.nome,
+    pagamento: pagamentoSelecionado,
+    total,
+    data: new Date().toISOString()
+  });
+  setData('vsm_vendas', vendas);
+
+  // Reset form
+  document.getElementById('sel-produto').value = '';
+  document.getElementById('inp-quantidade').value = 1;
+  document.getElementById('sel-cliente').value = '';
+  updateTotal();
+
+  toast('Venda registrada com sucesso! 🎉');
+}
+
+// ========== HISTÓRICO ==========
+function renderHistorico() {
+  const container = document.getElementById('lista-historico');
+  
+  // Calcular Resumo Financeiro
+  const totalAvista = vendas.filter(v => v.pagamento === 'avista').reduce((sum, v) => sum + v.total, 0);
+  const totalAprazo = vendas.filter(v => v.pagamento === 'aprazo').reduce((sum, v) => sum + v.total, 0);
+  
+  document.getElementById('resumo-avista').textContent = 'R$ ' + totalAvista.toFixed(2).replace('.', ',');
+  document.getElementById('resumo-aprazo').textContent = 'R$ ' + totalAprazo.toFixed(2).replace('.', ',');
+
+  if (!vendas.length) {
+    container.innerHTML = '<div class="empty"><div class="icon">📭</div><p>Nenhuma venda registrada ainda</p></div>';
+    return;
+  }
+  const sorted = [...vendas].reverse();
+  container.innerHTML = sorted.map(v => {
+    const d = new Date(v.data);
+    const dataStr = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const badge = v.pagamento === 'avista'
+      ? '<span class="h-badge badge-vista">💵 À Vista</span>'
+      : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
+    return `
+      <div class="history-item">
+        <div class="h-header">
+          <span class="h-client">${v.clienteNome}</span>
+          <span class="h-total">R$ ${v.total.toFixed(2).replace('.', ',')}</span>
+        </div>
+        <div class="h-details">
+          ${v.produtoNome} — ${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}
+        </div>
+        <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
+        ${badge}
+      </div>
+    `;
+  }).join('');
+}
+
+// ========== HISTÓRICO POR CLIENTE ==========
+function renderHistoricoClientes() {
+  const container = document.getElementById('historico-clientes');
+  if (!clientes.length) {
+    container.innerHTML = '<div class="empty"><div class="icon">📊</div><p>Cadastre clientes para ver o histórico</p></div>';
+    return;
+  }
+  container.innerHTML = clientes.map(c => {
+    const vendasCliente = vendas.filter(v => v.clienteId === c.id);
+    const totalGasto = vendasCliente.reduce((sum, v) => sum + v.total, 0);
+    const qtdVendas = vendasCliente.length;
+    return `
+      <div class="client-card">
+        <h3 onclick="verHistoricoCliente('${c.id}')">${c.nome} 📊</h3>
+        <div class="c-info">${c.telefone || 'Sem telefone'}</div>
+        <div class="c-stats">
+          <div class="c-stat">${qtdVendas} vendas</div>
+          <div class="c-stat">R$ ${totalGasto.toFixed(2).replace('.', ',')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function verHistoricoCliente(clienteId) {
+  const cliente = clientes.find(c => c.id === clienteId);
+  if (!cliente) return;
+  
+  const vendasCliente = vendas.filter(v => v.clienteId === clienteId).reverse();
+  const totalGasto = vendasCliente.reduce((sum, v) => sum + v.total, 0);
+  
+  document.getElementById('hist-cli-titulo').textContent = `📊 ${cliente.nome}`;
+  
+  let html = `
+    <div style="background:#FFF0EA;padding:12px;border-radius:10px;margin-bottom:14px;">
+      <div style="font-size:0.85rem;color:var(--text-light);">Total gasto</div>
+      <div style="font-size:1.5rem;font-weight:800;color:var(--primary);">R$ ${totalGasto.toFixed(2).replace('.', ',')}</div>
+      <div style="font-size:0.8rem;color:var(--text-light);margin-top:4px;">${vendasCliente.length} compra(s)</div>
+    </div>
+  `;
+  
+  if (!vendasCliente.length) {
+    html += '<div class="empty"><p>Nenhuma compra registrada</p></div>';
+  } else {
+    html += vendasCliente.map(v => {
+      const d = new Date(v.data);
+      const dataStr = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      const badge = v.pagamento === 'avista'
+        ? '<span class="h-badge badge-vista">💵 À Vista</span>'
+        : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
+      return `
+        <div class="history-item">
+          <div class="h-header">
+            <span class="h-client">${v.produtoNome}</span>
+            <span class="h-total">R$ ${v.total.toFixed(2).replace('.', ',')}</span>
+          </div>
+          <div class="h-details">${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}</div>
+          <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
+          ${badge}
+        </div>
+      `;
+    }).join('');
+  }
+  
+  document.getElementById('hist-cli-conteudo').innerHTML = html;
+  openModal('modal-hist-cliente');
+}
+
+// ========== TOAST ==========
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ========== START ==========
+init();
+</script>
+
+</body>
+</html>
