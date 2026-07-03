@@ -751,7 +751,10 @@ function verHistoricoCliente(clienteId) {
           </div>
           <div class="h-details">${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}</div>
           <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
-          ${badge}
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            ${badge}
+            ${v.pagamento === 'aprazo' ? `<button class="btn btn-success btn-sm" onclick="receberVenda('${v.id}', '${clienteId}')" style="padding:4px 10px; font-size:0.7rem;">💰 Receber</button>` : ''}
+          </div>
         </div>
       `;
     }).join('');
@@ -759,6 +762,18 @@ function verHistoricoCliente(clienteId) {
   
   document.getElementById('hist-cli-conteudo').innerHTML = html;
   openModal('modal-hist-cliente');
+}
+
+function receberVenda(vendaId, clienteId) {
+  if (!confirm('Confirmar recebimento desta venda?')) return;
+  const vendaIndex = vendas.findIndex(v => v.id === vendaId);
+  if (vendaIndex > -1) {
+    vendas[vendaIndex].pagamento = 'avista';
+    setData('vsm_vendas', vendas);
+    toast('Pagamento recebido! 💰');
+    verHistoricoCliente(clienteId); // Atualiza o modal
+    renderHistorico(); // Atualiza a aba de histórico geral
+  }
 }
 
 // ========== TOAST ==========
