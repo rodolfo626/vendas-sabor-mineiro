@@ -189,6 +189,17 @@
     font-size: 0.78rem; font-weight: 600; color: var(--primary);
   }
 
+  /* CART */
+  .cart-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; background: #FFF8F0;
+  }
+  .cart-info { flex: 1; }
+  .cart-name { font-weight: 600; font-size: 0.9rem; }
+  .cart-sub { font-size: 0.8rem; color: var(--text-light); }
+  .cart-price { font-weight: 700; color: var(--primary); }
+
   .hidden { display: none !important; }
 
   /* QUANTITY ROW */
@@ -246,24 +257,35 @@
   <!-- TAB: VENDA -->
   <div id="tab-venda">
     <div class="card">
-      <h2>📦 Produto</h2>
+      <h2>📦 Adicionar Produto</h2>
       <div class="select-row">
         <div class="form-group">
-          <label>Selecione o produto</label>
-          <select id="sel-produto" onchange="updateTotal()">
+          <label>Produto</label>
+          <select id="sel-produto">
             <option value="">-- Escolha um produto --</option>
           </select>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="openModal('modal-produto')" title="Cadastrar novo produto">＋</button>
       </div>
+      <div class="qty-row" style="margin-top: 14px;">
+        <div style="flex: 1;">
+          <label>Quantidade</label>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <input type="number" id="inp-quantidade" value="1" min="1">
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="adicionarAoCarrinho()" style="width: auto; height: 44px; margin-top: 22px;">🛒 Add</button>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>🔢 Quantidade</h2>
-      <div class="qty-row">
-        <button class="qty-btn" onclick="changeQty(-1)">−</button>
-        <input type="number" id="inp-quantidade" value="1" min="1" onchange="updateTotal()" oninput="updateTotal()">
-        <button class="qty-btn" onclick="changeQty(1)">+</button>
+    <div class="card" id="card-carrinho">
+      <h2>🛒 Carrinho</h2>
+      <div id="lista-carrinho">
+        <div class="empty" style="padding: 10px;">
+          <p style="font-size: 0.8rem;">Carrinho vazio</p>
+        </div>
       </div>
     </div>
 
@@ -438,6 +460,7 @@ function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 let produtos = getData('vsm_produtos');
 let clientes = getData('vsm_clientes');
 let vendas = getData('vsm_vendas');
+let carrinho = [];
 let pagamentoSelecionado = 'avista';
 
 // ========== INIT ==========
@@ -606,50 +629,104 @@ function changeQty(delta) {
   let val = parseInt(inp.value) || 1;
   val = Math.max(1, val + delta);
   inp.value = val;
+}
+
+// ========== CARRINHO ==========
+function adicionarAoCarrinho() {
+  const prodId = document.getElementById('sel-produto').value;
+  const qty = parseInt(document.getElementById('inp-quantidade').value) || 0;
+  
+  if (!prodId) return toast('Selecione um produto');
+  if (qty < 1) return toast('Informe a quantidade');
+  
+  const prod = produtos.find(p => p.id === prodId);
+  const itemExistente = carrinho.find(item => item.produtoId === prodId);
+  
+  if (itemExistente) {
+    itemExistente.quantidade += qty;
+    itemExistente.total = itemExistente.quantidade * itemExistente.valorUnitario;
+  } else {
+    carrinho.push({
+      produtoId: prodId,
+      produtoNome: prod.nome,
+      valorUnitario: prod.valor,
+      quantidade: qty,
+      total: prod.valor * qty
+    });
+  }
+  
+  document.getElementById('sel-produto').value = '';
+  document.getElementById('inp-quantidade').value = 1;
+  renderCarrinho();
   updateTotal();
+  toast('Adicionado! 🛒');
+}
+
+function removerDoCarrinho(index) {
+  carrinho.splice(index, 1);
+  renderCarrinho();
+  updateTotal();
+}
+
+function renderCarrinho() {
+  const container = document.getElementById('lista-carrinho');
+  if (!carrinho.length) {
+    container.innerHTML = '<div class="empty" style="padding: 10px;"><p style="font-size: 0.8rem;">Carrinho vazio</p></div>';
+    return;
+  }
+  
+  container.innerHTML = carrinho.map((item, index) => `
+    <div class="cart-item">
+      <div class="cart-info">
+        <div class="cart-name">${item.produtoNome}</div>
+        <div class="cart-sub">${item.quantidade}x R$ ${item.valorUnitario.toFixed(2).replace('.', ',')}</div>
+      </div>
+      <div style="text-align: right; margin-right: 10px;">
+        <div class="cart-price">R$ ${item.total.toFixed(2).replace('.', ',')}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removerDoCarrinho(${index})" style="padding: 5px 8px;">✕</button>
+    </div>
+  `).join('');
 }
 
 // ========== TOTAL ==========
 function updateTotal() {
-  const prodId = document.getElementById('sel-produto').value;
-  const qty = parseInt(document.getElementById('inp-quantidade').value) || 0;
-  const prod = produtos.find(p => p.id === prodId);
-  const total = prod ? prod.valor * qty : 0;
+  const total = carrinho.reduce((sum, item) => sum + item.total, 0);
   document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
 }
 
 // ========== FINALIZAR VENDA ==========
 function finalizarVenda() {
-  const prodId = document.getElementById('sel-produto').value;
-  const qty = parseInt(document.getElementById('inp-quantidade').value) || 0;
   const clienteId = document.getElementById('sel-cliente').value;
 
-  if (!prodId) return toast('Selecione um produto');
-  if (qty < 1) return toast('Informe a quantidade');
+  if (carrinho.length === 0) return toast('Adicione produtos ao carrinho');
   if (!clienteId) return toast('Selecione um cliente');
 
-  const prod = produtos.find(p => p.id === prodId);
   const cliente = clientes.find(c => c.id === clienteId);
-  const total = prod.valor * qty;
+  const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
 
-  vendas.push({
+  // Registra cada item do carrinho como uma venda ou agrupa? 
+  // Para manter compatibilidade com o histórico anterior que era 1 produto por venda,
+  // vamos registrar a venda com a lista de produtos (ou várias entradas).
+  // Vamos adaptar para registrar uma venda com array de produtos.
+  
+  const novaVenda = {
     id: Date.now().toString(),
-    produtoId: prodId,
-    produtoNome: prod.nome,
-    valorUnitario: prod.valor,
-    quantidade: qty,
     clienteId: clienteId,
     clienteNome: cliente.nome,
+    produtos: [...carrinho], // Lista de produtos
     pagamento: pagamentoSelecionado,
-    total,
+    total: totalGeral,
     data: new Date().toISOString()
-  });
+  };
+
+  vendas.push(novaVenda);
   setData('vsm_vendas', vendas);
 
   // Reset form
-  document.getElementById('sel-produto').value = '';
-  document.getElementById('inp-quantidade').value = 1;
+  carrinho = [];
   document.getElementById('sel-cliente').value = '';
+  renderCarrinho();
   updateTotal();
 
   toast('Venda registrada com sucesso! 🎉');
@@ -677,6 +754,15 @@ function renderHistorico() {
     const badge = v.pagamento === 'avista'
       ? '<span class="h-badge badge-vista">💵 À Vista</span>'
       : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
+    
+    // Suporte para vendas antigas (1 produto) e novas (array de produtos)
+    let listaProdutosHtml = '';
+    if (v.produtos && Array.isArray(v.produtos)) {
+      listaProdutosHtml = v.produtos.map(p => `<div>${p.produtoNome} — ${p.quantidade}x R$ ${p.valorUnitario.toFixed(2).replace('.', ',')}</div>`).join('');
+    } else {
+      listaProdutosHtml = `<div>${v.produtoNome} — ${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}</div>`;
+    }
+
     return `
       <div class="history-item">
         <div class="h-header">
@@ -684,7 +770,7 @@ function renderHistorico() {
           <span class="h-total">R$ ${v.total.toFixed(2).replace('.', ',')}</span>
         </div>
         <div class="h-details">
-          ${v.produtoNome} — ${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}
+          ${listaProdutosHtml}
         </div>
         <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
         ${badge}
@@ -743,13 +829,21 @@ function verHistoricoCliente(clienteId) {
       const badge = v.pagamento === 'avista'
         ? '<span class="h-badge badge-vista">💵 À Vista</span>'
         : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
+      // Suporte para vendas antigas (1 produto) e novas (array de produtos)
+      let listaProdutosHtml = '';
+      if (v.produtos && Array.isArray(v.produtos)) {
+        listaProdutosHtml = v.produtos.map(p => `<div>${p.produtoNome} — ${p.quantidade}x R$ ${p.valorUnitario.toFixed(2).replace('.', ',')}</div>`).join('');
+      } else {
+        listaProdutosHtml = `<div>${v.produtoNome} — ${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}</div>`;
+      }
+
       return `
         <div class="history-item">
           <div class="h-header">
-            <span class="h-client">${v.produtoNome}</span>
+            <span class="h-client">${v.produtos ? 'Venda Múltipla' : v.produtoNome}</span>
             <span class="h-total">R$ ${v.total.toFixed(2).replace('.', ',')}</span>
           </div>
-          <div class="h-details">${v.quantidade}x R$ ${v.valorUnitario.toFixed(2).replace('.', ',')}</div>
+          <div class="h-details">${listaProdutosHtml}</div>
           <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
             ${badge}
