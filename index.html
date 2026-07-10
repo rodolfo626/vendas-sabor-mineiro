@@ -135,6 +135,7 @@
   }
   .badge-vista { background: #D5F5E3; color: #1E8449; }
   .badge-prazo { background: #FDEBD0; color: #B9770E; }
+  .badge-encomenda { background: #E1F5FE; color: #0288D1; }
 
   /* MODAL */
   .modal-overlay {
@@ -299,6 +300,13 @@
           </select>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="openModal('modal-cliente')" title="Cadastrar novo cliente">＋</button>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="chk-encomenda" style="width: 18px; height: 18px;">
+          <span>📦 Marcar como Encomenda</span>
+        </label>
       </div>
     </div>
 
@@ -698,6 +706,7 @@ function updateTotal() {
 // ========== FINALIZAR VENDA ==========
 function finalizarVenda() {
   const clienteId = document.getElementById('sel-cliente').value;
+  const ehEncomenda = document.getElementById('chk-encomenda').checked;
 
   if (carrinho.length === 0) return toast('Adicione produtos ao carrinho');
   if (!clienteId) return toast('Selecione um cliente');
@@ -705,17 +714,13 @@ function finalizarVenda() {
   const cliente = clientes.find(c => c.id === clienteId);
   const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
 
-  // Registra cada item do carrinho como uma venda ou agrupa? 
-  // Para manter compatibilidade com o histórico anterior que era 1 produto por venda,
-  // vamos registrar a venda com a lista de produtos (ou várias entradas).
-  // Vamos adaptar para registrar uma venda com array de produtos.
-  
   const novaVenda = {
     id: Date.now().toString(),
     clienteId: clienteId,
     clienteNome: cliente.nome,
-    produtos: [...carrinho], // Lista de produtos
+    produtos: [...carrinho],
     pagamento: pagamentoSelecionado,
+    encomenda: ehEncomenda,
     total: totalGeral,
     data: new Date().toISOString()
   };
@@ -726,10 +731,11 @@ function finalizarVenda() {
   // Reset form
   carrinho = [];
   document.getElementById('sel-cliente').value = '';
+  document.getElementById('chk-encomenda').checked = false;
   renderCarrinho();
   updateTotal();
 
-  toast('Venda registrada com sucesso! 🎉');
+  toast(ehEncomenda ? 'Encomenda registrada! 📦' : 'Venda registrada com sucesso! 🎉');
 }
 
 // ========== HISTÓRICO ==========
@@ -755,6 +761,8 @@ function renderHistorico() {
       ? '<span class="h-badge badge-vista">💵 À Vista</span>'
       : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
     
+    const badgeEncomenda = v.encomenda ? '<span class="h-badge badge-encomenda">📦 Encomenda</span>' : '';
+    
     // Suporte para vendas antigas (1 produto) e novas (array de produtos)
     let listaProdutosHtml = '';
     if (v.produtos && Array.isArray(v.produtos)) {
@@ -774,7 +782,10 @@ function renderHistorico() {
         </div>
         <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-          ${badge}
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            ${badge}
+            ${badgeEncomenda}
+          </div>
           <button class="btn btn-danger" onclick="excluirVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">🗑️ Excluir</button>
         </div>
       </div>
@@ -832,6 +843,9 @@ function verHistoricoCliente(clienteId) {
       const badge = v.pagamento === 'avista'
         ? '<span class="h-badge badge-vista">💵 À Vista</span>'
         : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
+      
+      const badgeEncomenda = v.encomenda ? '<span class="h-badge badge-encomenda">📦 Encomenda</span>' : '';
+
       // Suporte para vendas antigas (1 produto) e novas (array de produtos)
       let listaProdutosHtml = '';
       if (v.produtos && Array.isArray(v.produtos)) {
@@ -849,8 +863,9 @@ function verHistoricoCliente(clienteId) {
           <div class="h-details">${listaProdutosHtml}</div>
           <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; gap: 8px;">
-            <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
               ${badge}
+              ${badgeEncomenda}
               <button class="btn btn-danger" onclick="excluirVenda('${v.id}', '${clienteId}')" style="padding:4px 8px; font-size:0.7rem;">🗑️</button>
             </div>
             ${v.pagamento === 'aprazo' ? `<button class="btn btn-success btn-sm" onclick="receberVenda('${v.id}', '${clienteId}')" style="padding:4px 10px; font-size:0.7rem;">💰 Receber</button>` : ''}
