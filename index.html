@@ -773,7 +773,10 @@ function renderHistorico() {
           ${listaProdutosHtml}
         </div>
         <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
-        ${badge}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+          ${badge}
+          <button class="btn btn-danger" onclick="excluirVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">🗑️ Excluir</button>
+        </div>
       </div>
     `;
   }).join('');
@@ -845,8 +848,11 @@ function verHistoricoCliente(clienteId) {
           </div>
           <div class="h-details">${listaProdutosHtml}</div>
           <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            ${badge}
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; gap: 8px;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              ${badge}
+              <button class="btn btn-danger" onclick="excluirVenda('${v.id}', '${clienteId}')" style="padding:4px 8px; font-size:0.7rem;">🗑️</button>
+            </div>
             ${v.pagamento === 'aprazo' ? `<button class="btn btn-success btn-sm" onclick="receberVenda('${v.id}', '${clienteId}')" style="padding:4px 10px; font-size:0.7rem;">💰 Receber</button>` : ''}
           </div>
         </div>
@@ -865,9 +871,18 @@ function receberVenda(vendaId, clienteId) {
     vendas[vendaIndex].pagamento = 'avista';
     setData('vsm_vendas', vendas);
     toast('Pagamento recebido! 💰');
-    verHistoricoCliente(clienteId); // Atualiza o modal
+    if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
     renderHistorico(); // Atualiza a aba de histórico geral
   }
+}
+
+function excluirVenda(vendaId, clienteId) {
+  if (!confirm('Deseja realmente EXCLUIR esta venda do histórico? Esta ação não pode ser desfeita.')) return;
+  vendas = vendas.filter(v => v.id !== vendaId);
+  setData('vsm_vendas', vendas);
+  toast('Venda excluída com sucesso! 🗑️');
+  if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
+  renderHistorico(); // Atualiza a aba de histórico geral
 }
 
 // ========== TOAST ==========
