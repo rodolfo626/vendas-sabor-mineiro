@@ -190,6 +190,15 @@
     font-size: 0.78rem; font-weight: 600; color: var(--primary);
   }
 
+  .client-card .c-stat.stat-prazo {
+    background: #FEF5E7; color: #B9770E; border: 1px solid #FAD7A0;
+  }
+  .btn-whatsapp {
+    background: #25D366; color: white; padding: 6px 10px; border-radius: 8px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+
   /* CART */
   .cart-item {
     display: flex; justify-content: space-between; align-items: center;
@@ -803,14 +812,28 @@ function renderHistoricoClientes() {
   container.innerHTML = clientes.map(c => {
     const vendasCliente = vendas.filter(v => v.clienteId === c.id);
     const totalGasto = vendasCliente.reduce((sum, v) => sum + v.total, 0);
+    const totalAprazo = vendasCliente.filter(v => v.pagamento === 'aprazo').reduce((sum, v) => sum + v.total, 0);
     const qtdVendas = vendasCliente.length;
+    
+    let whatsappLink = '';
+    if (totalAprazo > 0 && c.telefone) {
+      const foneLimpo = c.telefone.replace(/\D/g, '');
+      const msg = encodeURIComponent(`Olá ${c.nome}, tudo bem? Estou passando para informar que o seu saldo em aberto no Sabor Mineiro é de R$ ${totalAprazo.toFixed(2).replace('.', ',')}.`);
+      whatsappLink = `<a href="https://wa.me/55${foneLimpo}?text=${msg}" target="_blank" class="btn-whatsapp">📲 Cobrar</a>`;
+    }
+
     return `
       <div class="client-card">
         <h3 onclick="verHistoricoCliente('${c.id}')">${c.nome} 📊</h3>
         <div class="c-info">${c.telefone || 'Sem telefone'}</div>
         <div class="c-stats">
           <div class="c-stat">${qtdVendas} vendas</div>
-          <div class="c-stat">R$ ${totalGasto.toFixed(2).replace('.', ',')}</div>
+          <div class="c-stat">Total: R$ ${totalGasto.toFixed(2).replace('.', ',')}</div>
+          ${totalAprazo > 0 ? `<div class="c-stat stat-prazo">A Prazo: R$ ${totalAprazo.toFixed(2).replace('.', ',')}</div>` : ''}
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="verHistoricoCliente('${c.id}')" style="width: auto; padding: 6px 12px;">Ver Detalhes</button>
+          ${whatsappLink}
         </div>
       </div>
     `;
