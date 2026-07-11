@@ -246,6 +246,39 @@
   .sale-product-row .spr-name { font-weight: 600; font-size: 0.88rem; }
   .sale-product-row .spr-sub { font-size: 0.78rem; color: var(--text-light); }
   .sale-product-row .spr-total { font-weight: 700; color: var(--primary); }
+  /* PAYMENT SCREEN (PUBLIC) */
+  #view-pagamento {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    min-height: 80vh;
+  }
+  .pay-card {
+    background: white;
+    width: 100%;
+    max-width: 350px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+  }
+  .pay-logo { font-size: 3rem; margin-bottom: 15px; }
+  .pay-val { font-size: 2.2rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
+  .pay-label { font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+  .pix-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px dashed var(--border);
+    margin: 20px 0;
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #444;
+  }
 </style>
 </head>
 <body>
@@ -255,7 +288,29 @@
   <p>Sistema de vendas</p>
 </header>
 
-<div class="container">
+<div id="view-pagamento">
+  <div class="pay-card">
+    <div class="pay-logo">🧀</div>
+    <h2 style="margin-bottom: 5px;">Sabor Mineiro</h2>
+    <p class="pay-label">Olá <span id="p-cliente">Cliente</span>!</p>
+    
+    <div style="margin: 25px 0;">
+      <p class="pay-label">Valor a pagar</p>
+      <div class="pay-val" id="p-valor">R$ 0,00</div>
+    </div>
+
+    <div class="pix-box" id="p-chave">---</div>
+    
+    <button class="btn btn-primary" onclick="copiarPixPagamento()">📋 Copiar Chave Pix</button>
+    
+    <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 15px;">
+      Após copiar, abra o app do seu banco e escolha "Pix" > "Pagar" ou "Transferir".
+    </p>
+  </div>
+  <a href="index.html" style="margin-top: 20px; font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Voltar ao Sistema</a>
+</div>
+
+<div class="container" id="main-container">
   <!-- TABS -->
   <div class="tabs">
     <button class="active" onclick="showTab('venda')">🛒 Venda</button>
@@ -497,11 +552,42 @@ let pagamentoSelecionado = 'avista';
 
 // ========== INIT ==========
 function init() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('pago')) {
+    document.getElementById('main-container').style.display = 'none';
+    document.getElementById('view-pagamento').style.display = 'flex';
+    document.querySelector('header p').textContent = 'Página de Pagamento';
+    
+    const valor = params.get('v') || '0,00';
+    const nome = params.get('n') || 'Cliente';
+    const chave = params.get('k') || '';
+    
+    document.getElementById('p-cliente').textContent = nome;
+    document.getElementById('p-valor').textContent = `R$ ${valor}`;
+    document.getElementById('p-chave').textContent = chave;
+    return;
+  }
+
   renderProdutosSelect();
   renderClientesSelect();
   renderListaProdutos();
   renderListaClientes();
   renderHistorico();
+  renderHistoricoClientes();
+  
+  if (document.getElementById('cfg-pix')) {
+    document.getElementById('cfg-pix').value = pixKey;
+    document.getElementById('cfg-pix-nome').value = pixNome;
+  }
+}
+
+function copiarPixPagamento() {
+  const chave = document.getElementById('p-chave').textContent;
+  if (!chave || chave === '---') return;
+  
+  navigator.clipboard.writeText(chave).then(() => {
+    toast('Chave Pix copiada! ✅');
+  });
 }
 
 // ========== TABS ==========
@@ -902,9 +988,12 @@ function renderHistoricoClientes() {
     let whatsappLink = '';
     if (totalAprazo > 0 && c.telefone) {
       const foneLimpo = c.telefone.replace(/\D/g, '');
-      let msgTexto = `Olá ${c.nome}, tudo bem? Estou passando para informar que o seu saldo em aberto no Sabor Mineiro é de R$ ${totalAprazo.toFixed(2).replace('.', ',')}.`;
+      const valorFormatado = totalAprazo.toFixed(2).replace('.', ',');
+      const linkPagamento = `https://rodolfo626.github.io/vendas-sabor-mineiro/?pago=1&v=${valorFormatado}&n=${encodeURIComponent(c.nome)}&k=${encodeURIComponent(pixKey)}`;
+      
+      let msgTexto = `Olá ${c.nome}, tudo bem? Estou passando para informar que o seu saldo em aberto no Sabor Mineiro é de R$ ${valorFormatado}.`;
       if (pixKey) {
-        msgTexto += `\n\n👇 *Para pagar via Pix:*\n\nChave Pix (Copie abaixo):\n${pixKey}\n\n_Basta copiar a chave acima e colar no aplicativo do seu banco na opção Pix._`;
+        msgTexto += `\n\n👇 *Pague clicando no botão abaixo:*\n${linkPagamento}\n\n_Ou se preferir, use a chave Pix:_ \n${pixKey}`;
       }
       const msg = encodeURIComponent(msgTexto);
       whatsappLink = `<a href="https://wa.me/55${foneLimpo}?text=${msg}" target="_blank" class="btn-whatsapp">📲 Cobrar</a>`;
