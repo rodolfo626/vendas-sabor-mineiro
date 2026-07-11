@@ -431,7 +431,7 @@
 <!-- MODAL: NOVO CLIENTE -->
 <div class="modal-overlay" id="modal-cliente">
   <div class="modal">
-    <h3>👤 Cadastrar Cliente</h3>
+    <h3 id="modal-cliente-titulo">👤 Cadastrar Cliente</h3>
     <div class="form-group">
       <label>Nome completo</label>
       <input type="text" id="cli-nome" placeholder="Nome do cliente">
@@ -449,7 +449,7 @@
       <textarea id="cli-obs" placeholder="Observações sobre o cliente..."></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-outline" onclick="fecharModalCliente()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
     </div>
   </div>
@@ -572,6 +572,8 @@ function renderListaProdutos() {
 }
 
 // ========== CLIENTES ==========
+let editandoClienteId = null;
+
 function salvarCliente() {
   const nome = document.getElementById('cli-nome').value.trim();
   const tel = document.getElementById('cli-telefone').value.trim();
@@ -579,21 +581,50 @@ function salvarCliente() {
   const obs = document.getElementById('cli-obs').value.trim();
   if (!nome) return toast('Informe o nome do cliente');
 
-  clientes.push({
-    id: Date.now().toString(),
-    nome, telefone: tel, endereco: end, observacoes: obs,
-    criadoEm: new Date().toISOString()
-  });
-  setData('vsm_clientes', clientes);
+  if (editandoClienteId) {
+    const idx = clientes.findIndex(c => c.id === editandoClienteId);
+    if (idx > -1) {
+      clientes[idx] = { ...clientes[idx], nome, telefone: tel, endereco: end, observacoes: obs };
+      toast('Cliente atualizado! 📝');
+    }
+  } else {
+    clientes.push({
+      id: Date.now().toString(),
+      nome, telefone: tel, endereco: end, observacoes: obs,
+      criadoEm: new Date().toISOString()
+    });
+    toast('Cliente cadastrado! ✅');
+  }
 
+  setData('vsm_clientes', clientes);
+  fecharModalCliente();
+  renderClientesSelect();
+  renderListaClientes();
+  renderHistoricoClientes();
+}
+
+function abrirEditarCliente(id) {
+  const cliente = clientes.find(c => c.id === id);
+  if (!cliente) return;
+  
+  editandoClienteId = id;
+  document.getElementById('modal-cliente-titulo').textContent = '✏️ Editar Cliente';
+  document.getElementById('cli-nome').value = cliente.nome;
+  document.getElementById('cli-telefone').value = cliente.telefone || '';
+  document.getElementById('cli-endereco').value = cliente.endereco || '';
+  document.getElementById('cli-obs').value = cliente.observacoes || '';
+  
+  openModal('modal-cliente');
+}
+
+function fecharModalCliente() {
+  editandoClienteId = null;
+  document.getElementById('modal-cliente-titulo').textContent = '👤 Cadastrar Cliente';
   document.getElementById('cli-nome').value = '';
   document.getElementById('cli-telefone').value = '';
   document.getElementById('cli-endereco').value = '';
   document.getElementById('cli-obs').value = '';
   closeModal('modal-cliente');
-  renderClientesSelect();
-  renderListaClientes();
-  toast('Cliente cadastrado! ✅');
 }
 
 function excluirCliente(id) {
@@ -626,6 +657,7 @@ function renderListaClientes() {
         <div class="li-sub">${c.telefone || 'Sem telefone'} ${c.endereco ? '• ' + c.endereco : ''}</div>
       </div>
       <div class="li-actions">
+        <button class="btn btn-secondary btn-sm" onclick="abrirEditarCliente('${c.id}')" title="Editar cliente">✏️</button>
         <button class="btn btn-outline btn-sm" onclick="verHistoricoCliente('${c.id}')">📊</button>
         <button class="btn btn-danger" onclick="excluirCliente('${c.id}')">🗑️</button>
       </div>
@@ -833,6 +865,7 @@ function renderHistoricoClientes() {
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
           <button class="btn btn-outline btn-sm" onclick="verHistoricoCliente('${c.id}')" style="width: auto; padding: 6px 12px;">Ver Detalhes</button>
+          <button class="btn btn-secondary btn-sm" onclick="abrirEditarCliente('${c.id}')" style="width: auto; padding: 6px 12px;">✏️ Editar</button>
           ${whatsappLink}
         </div>
       </div>
