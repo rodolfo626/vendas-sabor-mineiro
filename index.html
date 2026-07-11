@@ -437,6 +437,7 @@
 
     <div class="card">
       <h2>👥 Clientes Cadastrados</h2>
+      <input type="text" id="busca-cliente" placeholder="🔍 Pesquisar cliente..." onkeyup="renderListaClientes()" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:12px; font-size:0.95rem;">
       <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:14px;" onclick="openModal('modal-cliente')">＋ Cadastrar Cliente</button>
       <div id="lista-clientes">
         <div class="empty">
@@ -449,6 +450,7 @@
     <!-- Histórico por cliente -->
     <div class="card">
       <h2>📊 Histórico por Cliente</h2>
+      <input type="text" id="busca-cliente-hist" placeholder="🔍 Filtrar histórico por cliente..." onkeyup="renderHistoricoClientes()" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:12px; font-size:0.95rem;">
       <div id="historico-clientes">
         <div class="empty">
           <div class="icon">📊</div>
@@ -784,11 +786,19 @@ function renderClientesSelect() {
 
 function renderListaClientes() {
   const container = document.getElementById('lista-clientes');
-  if (!clientes.length) {
-    container.innerHTML = '<div class="empty"><div class="icon">👤</div><p>Nenhum cliente cadastrado</p></div>';
+  const termo = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
+  
+  const filtrados = clientes.filter(c => 
+    c.nome.toLowerCase().includes(termo) || 
+    (c.telefone && c.telefone.includes(termo))
+  );
+
+  if (!filtrados.length) {
+    container.innerHTML = '<div class="empty"><div class="icon">👤</div><p>Nenhum cliente encontrado</p></div>';
     return;
   }
-  container.innerHTML = clientes.map(c => `
+  
+  container.innerHTML = filtrados.map(c => `
     <div class="list-item">
       <div class="li-info">
         <div class="li-name">${c.nome}</div>
@@ -975,11 +985,16 @@ function renderHistorico() {
 // ========== HISTÓRICO POR CLIENTE ==========
 function renderHistoricoClientes() {
   const container = document.getElementById('historico-clientes');
-  if (!clientes.length) {
-    container.innerHTML = '<div class="empty"><div class="icon">📊</div><p>Cadastre clientes para ver o histórico</p></div>';
+  const termo = (document.getElementById('busca-cliente-hist')?.value || '').toLowerCase();
+  
+  const filtrados = clientes.filter(c => c.nome.toLowerCase().includes(termo));
+
+  if (!filtrados.length) {
+    container.innerHTML = '<div class="empty"><p>Nenhum cliente encontrado</p></div>';
     return;
   }
-  container.innerHTML = clientes.map(c => {
+
+  container.innerHTML = filtrados.map(c => {
     const vendasCliente = vendas.filter(v => v.clienteId === c.id);
     const totalGasto = vendasCliente.reduce((sum, v) => sum + v.total, 0);
     const totalAprazo = vendasCliente.filter(v => v.pagamento === 'aprazo').reduce((sum, v) => sum + v.total, 0);
