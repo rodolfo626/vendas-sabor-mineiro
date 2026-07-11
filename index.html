@@ -279,6 +279,22 @@
     font-size: 0.9rem;
     color: #444;
   }
+  /* PIX KEYS */
+  .pix-key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .pix-key-item.active {
+    border-color: var(--primary);
+    background: #FFF0EA;
+  }
 </style>
 </head>
 <body>
@@ -422,17 +438,24 @@
 
   <!-- TAB: CLIENTES -->
   <div id="tab-clientes" class="hidden">
-    <!-- Configurações Pix -->
+    <!-- Gerenciamento de Chaves Pix -->
     <div class="card">
-      <h2>🔑 Minha Chave Pix</h2>
-      <div style="display: flex; gap: 8px;">
-        <input type="text" id="cfg-pix" placeholder="Chave Pix para cobrança" style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
-      <div class="form-group" style="margin-top: 10px;">
-        <label>Nome do Beneficiário (Opcional)</label>
-        <input type="text" id="cfg-pix-nome" placeholder="Seu nome ou Sabor Mineiro" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+      <h2>🔑 Chaves Pix Salvas</h2>
+      <div id="lista-chaves-pix" style="margin-bottom: 12px;"></div>
+      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <input type="text" id="nova-chave-pix" placeholder="Cadastrar nova chave..." style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+        <button class="btn btn-primary" onclick="adicionarChavePix()" style="width: auto; padding: 0 16px;">＋</button>
       </div>
-      <button class="btn btn-primary" onclick="salvarPix()" style="width: 100%; margin-top: 10px;">Salvar Configurações Pix</button>
-      <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">O código "Pix Copia e Cola" permite que o cliente pague direto pelo app do banco.</p>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+      <div class="form-group">
+        <label>Chave Principal (Selecionada)</label>
+        <input type="text" id="cfg-pix" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #f9f9f9; color: var(--text-light);">
+      </div>
+      <div class="form-group">
+        <label>Nome do Beneficiário</label>
+        <input type="text" id="cfg-pix-nome" placeholder="Sabor Mineiro" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+      </div>
+      <button class="btn btn-primary" onclick="salvarConfigPix()" style="width: 100%;">Salvar Seleção</button>
     </div>
 
     <div class="card">
@@ -549,6 +572,7 @@ let clientes = getData('vsm_clientes');
 let vendas = getData('vsm_vendas');
 let pixKey = getData('vsm_pix') || '';
 let pixNome = getData('vsm_pix_nome') || 'Sabor Mineiro';
+let pixChaves = getData('vsm_pix_chaves') || [];
 let carrinho = [];
 let pagamentoSelecionado = 'avista';
 
@@ -576,6 +600,7 @@ function init() {
   renderListaClientes();
   renderHistorico();
   renderHistoricoClientes();
+  renderChavesPix();
   
   if (document.getElementById('cfg-pix')) {
     document.getElementById('cfg-pix').value = pixKey;
@@ -711,15 +736,74 @@ function salvarCliente() {
   }
 }
 
-function salvarPix() {
-  const key = document.getElementById('cfg-pix').value.trim();
+function renderChavesPix() {
+  const container = document.getElementById('lista-chaves-pix');
+  if (!container) return;
+  
+  if (!pixChaves.length) {
+    container.innerHTML = '<p style="font-size:0.8rem; color:var(--text-light); text-align:center;">Nenhuma chave cadastrada.</p>';
+    return;
+  }
+  
+  container.innerHTML = pixChaves.map(chave => `
+    <div class="pix-key-item ${chave === pixKey ? 'active' : ''}" onclick="selecionarChavePix('${chave}')">
+      <span style="font-size:0.9rem; font-weight:600;">${chave}</span>
+      <button onclick="removerChavePix(event, '${chave}')" style="background:none; border:none; color:#E74C3C; cursor:pointer; font-size:1.1rem;">&times;</button>
+    </div>
+  `).join('');
+}
+
+function adicionarChavePix() {
+  const input = document.getElementById('nova-chave-pix');
+  const chave = input.value.trim();
+  
+  if (!chave) return;
+  if (pixChaves.includes(chave)) {
+    toast('Esta chave já está cadastrada! ⚠️');
+    return;
+  }
+  
+  pixChaves.push(chave);
+  setData('vsm_pix_chaves', pixChaves);
+  input.value = '';
+  renderChavesPix();
+  toast('Chave adicionada! 🔑');
+}
+
+function selecionarChavePix(chave) {
+  pixKey = chave;
+  document.getElementById('cfg-pix').value = chave;
+  renderChavesPix();
+}
+
+function removerChavePix(event, chave) {
+  event.stopPropagation();
+  if (!confirm('Excluir esta chave?')) return;
+  
+  pixChaves = pixChaves.filter(c => c !== chave);
+  setData('vsm_pix_chaves', pixChaves);
+  
+  if (pixKey === chave) {
+    pixKey = '';
+    document.getElementById('cfg-pix').value = '';
+  }
+  
+  renderChavesPix();
+  toast('Chave removida! 🗑️');
+}
+
+function salvarConfigPix() {
   const nome = document.getElementById('cfg-pix-nome').value.trim() || 'Sabor Mineiro';
-  pixKey = key;
   pixNome = nome;
-  setData('vsm_pix', key);
+  setData('vsm_pix', pixKey);
   setData('vsm_pix_nome', nome);
-  renderHistoricoClientes(); // Atualiza os links de cobrança
-  toast('Configurações Pix salvas! 🔑');
+  renderHistoricoClientes();
+  toast('Configurações salvas! ✅');
+}
+
+function salvarPix() {
+  // Mantida para compatibilidade se chamada
+  salvarConfigPix();
 }
 
 // Função simples para gerar Pix Estático (BRCode)
