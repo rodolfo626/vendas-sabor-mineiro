@@ -367,6 +367,16 @@
 
   <!-- TAB: CLIENTES -->
   <div id="tab-clientes" class="hidden">
+    <!-- Configurações Pix -->
+    <div class="card">
+      <h2>🔑 Minha Chave Pix</h2>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="cfg-pix" placeholder="Chave Pix para cobrança" style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+        <button class="btn btn-primary" onclick="salvarPix()" style="width: auto; padding: 0 16px;">Salvar</button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">Será enviada na mensagem de cobrança do WhatsApp.</p>
+    </div>
+
     <div class="card">
       <h2>👥 Clientes Cadastrados</h2>
       <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:14px;" onclick="openModal('modal-cliente')">＋ Cadastrar Cliente</button>
@@ -477,6 +487,7 @@ function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 let produtos = getData('vsm_produtos');
 let clientes = getData('vsm_clientes');
 let vendas = getData('vsm_vendas');
+let pixKey = getData('vsm_pix') || '';
 let carrinho = [];
 let pagamentoSelecionado = 'avista';
 
@@ -601,6 +612,18 @@ function salvarCliente() {
   renderClientesSelect();
   renderListaClientes();
   renderHistoricoClientes();
+  
+  if (document.getElementById('cfg-pix')) {
+    document.getElementById('cfg-pix').value = pixKey;
+  }
+}
+
+function salvarPix() {
+  const key = document.getElementById('cfg-pix').value.trim();
+  pixKey = key;
+  setData('vsm_pix', key);
+  renderHistoricoClientes(); // Atualiza os links de cobrança
+  toast('Chave Pix salva! 🔑');
 }
 
 function abrirEditarCliente(id) {
@@ -850,7 +873,11 @@ function renderHistoricoClientes() {
     let whatsappLink = '';
     if (totalAprazo > 0 && c.telefone) {
       const foneLimpo = c.telefone.replace(/\D/g, '');
-      const msg = encodeURIComponent(`Olá ${c.nome}, tudo bem? Estou passando para informar que o seu saldo em aberto no Sabor Mineiro é de R$ ${totalAprazo.toFixed(2).replace('.', ',')}.`);
+      let msgTexto = `Olá ${c.nome}, tudo bem? Estou passando para informar que o seu saldo em aberto no Sabor Mineiro é de R$ ${totalAprazo.toFixed(2).replace('.', ',')}.`;
+      if (pixKey) {
+        msgTexto += `\n\nVocê pode realizar o pagamento via Pix: ${pixKey}`;
+      }
+      const msg = encodeURIComponent(msgTexto);
       whatsappLink = `<a href="https://wa.me/55${foneLimpo}?text=${msg}" target="_blank" class="btn-whatsapp">📲 Cobrar</a>`;
     }
 
