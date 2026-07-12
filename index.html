@@ -1575,10 +1575,14 @@ async function sincronizarLoja() {
   const repo = 'vendas-sabor-mineiro';
   
   try {
+    console.log('Iniciando sincronização...');
     // 1. Tentar pegar o SHA do arquivo se ele já existir
     let sha = null;
-    const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
-      headers: { 'Authorization': `token ${token}` }
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
+    console.log('Buscando arquivo em:', url);
+    
+    const getFile = await fetch(url, {
+      headers: { 'Authorization': `token ${token.trim()}` }
     });
     
     if (getFile.ok) {
