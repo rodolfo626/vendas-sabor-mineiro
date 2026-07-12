@@ -1585,10 +1585,17 @@ async function sincronizarLoja() {
     try {
       const getFile = await fetch(url, {
         headers: { 
-          'Authorization': `token ${token}`,
+          'Authorization': `token ${token.trim()}`,
           'Accept': 'application/vnd.github.v3+json'
         }
       });
+      
+      if (getFile.status === 401) {
+        btn.disabled = false;
+        btn.textContent = '🚀 Sincronizar Catálogo Online';
+        return toast('Erro: Token Inválido (Bad Credentials). Verifique o Token na aba Config.');
+      }
+
       if (getFile.ok) {
         const fileData = await getFile.json();
         sha = fileData.sha;
