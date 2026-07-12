@@ -1582,19 +1582,23 @@ async function sincronizarLoja() {
     console.log('Buscando arquivo em:', url);
     
     const getFile = await fetch(url, {
-      headers: { 'Authorization': `token ${token.trim()}` }
+      headers: { 'Authorization': `Bearer ${token.trim()}` }
     });
-    
+
+    if (getFile.status === 401 || getFile.status === 403) {
+      return toast('Erro de permissão: Verifique o Token do GitHub');
+    }
+
     if (getFile.ok) {
       const fileData = await getFile.json();
       sha = fileData.sha;
     }
 
     // 2. Criar ou atualizar o arquivo
-    const updateFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
+    const updateFile = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `token ${token}`,
+        'Authorization': `Bearer ${token.trim()}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
