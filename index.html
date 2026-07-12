@@ -1571,13 +1571,14 @@ async function sincronizarLoja() {
   const fileName = 'database.json';
   const owner = 'rodolfo626';
   const repo = 'vendas-sabor-mineiro';
-  const token = getData('vsm_token_github') || document.getElementById('config-token').value.trim();
+  const token = (getData('vsm_token_github') || document.getElementById('config-token').value.trim()).trim();
   
   if (!token) {
     btn.disabled = false;
     btn.textContent = '🚀 Sincronizar Catálogo Online';
-    return toast('GitHub Token é necessário na aba Config');
+    return toast('Por favor, cole o novo Token na aba Config');
   }
+
   try {
     let sha = null;
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
