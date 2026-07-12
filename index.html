@@ -295,6 +295,77 @@
     border-color: var(--primary);
     background: #FFF0EA;
   }
+  /* CATALOG STYLES */
+  .catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+  }
+  .catalog-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .catalog-img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-size: 2rem;
+  }
+  .catalog-info {
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .catalog-nome {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .catalog-desc {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    flex: 1;
+  }
+  .catalog-preco {
+    font-weight: 800;
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  .catalog-actions {
+    display: flex;
+    gap: 5px;
+  }
+  .btn-catalog {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .btn-wa { background: #25D366; color: white; }
+  .btn-share { background: #3498DB; color: white; }
 </style>
 </head>
 <body>
@@ -330,13 +401,22 @@
   <!-- TABS -->
   <div class="tabs">
     <button class="active" onclick="showTab('venda')">🛒 Venda</button>
+    <button onclick="showTab('catalogo')">📖 Catálogo</button>
     <button onclick="showTab('historico')">📋 Histórico</button>
     <button onclick="showTab('clientes')">👥 Clientes</button>
     <button onclick="showTab('produtos')">📦 Produtos</button>
   </div>
 
-  <!-- TAB: VENDA -->
-  <div id="tab-venda">
+  <!-- TAB: CATÁLOGO -->
+  <div id="tab-catalogo" class="hidden">
+    <div class="card">
+      <h2>📖 Catálogo de Produtos</h2>
+      <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 15px;">Compartilhe seus produtos com os clientes no WhatsApp.</p>
+      <div id="grid-catalogo" class="catalog-grid">
+        <!-- Itens do catálogo -->
+      </div>
+    </div>
+  </div>
     <div class="card">
       <h2>📦 Adicionar Produto</h2>
       <div class="select-row">
@@ -604,6 +684,7 @@ function init() {
   renderHistorico();
   renderHistoricoClientes();
   renderChavesPix();
+  renderCatalogo();
   
   if (document.getElementById('cfg-pix')) {
     document.getElementById('cfg-pix').value = pixKey;
@@ -700,6 +781,62 @@ function renderListaProdutos() {
       </div>
     </div>
   `).join('');
+  
+  renderCatalogo();
+}
+
+function renderCatalogo() {
+  const container = document.getElementById('grid-catalogo');
+  if (!container) return;
+
+  if (!produtos.length) {
+    container.innerHTML = '<div class="empty"><p>Nenhum produto para exibir no catálogo</p></div>';
+    return;
+  }
+
+  container.innerHTML = produtos.map(p => {
+    const precoFormatado = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const textoCompartilhar = `🧀 *Sabor Mineiro*%0A*${p.nome}*%0A${p.descricao || ''}%0A*Preço:* ${precoFormatado}`;
+    
+    return `
+      <div class="catalog-card">
+        <div class="catalog-img">🧀</div>
+        <div class="catalog-info">
+          <div class="catalog-nome">${p.nome}</div>
+          <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
+          <div class="catalog-preco">${precoFormatado}</div>
+          <div class="catalog-actions">
+            <button class="btn-catalog btn-wa" onclick="compartilharProdutoWA('${textoCompartilhar}')">
+              <span>💬 ZAP</span>
+            </button>
+            <button class="btn-catalog btn-share" onclick="compartilharGeral('${p.nome}', '${p.descricao}', '${precoFormatado}')">
+              <span>🔗 Link</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function compartilharProdutoWA(texto) {
+  window.open(`https://wa.me/?text=${texto}`, '_blank');
+}
+
+function compartilharGeral(nome, desc, preco) {
+  const link = window.location.href;
+  const texto = `🧀 *Sabor Mineiro*\n*${nome}*\n${desc}\n*Preço:* ${preco}\n\nVeja mais no nosso catálogo:\n${link}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Sabor Mineiro - ' + nome,
+      text: texto,
+      url: link
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(texto);
+    toast('Informações copiadas! 📋');
+  }
 }
 
 // ========== CLIENTES ==========
