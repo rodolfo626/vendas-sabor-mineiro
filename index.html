@@ -442,9 +442,12 @@
     <div class="card">
       <h2>🔑 Chaves Pix Salvas</h2>
       <div id="lista-chaves-pix" style="margin-bottom: 12px;"></div>
-      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-        <input type="text" id="nova-chave-pix" placeholder="Cadastrar nova chave..." style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
-        <button class="btn btn-primary" onclick="adicionarChavePix()" style="width: auto; padding: 0 16px;">＋</button>
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label>Nova Chave Pix (CPF, Celular, E-mail ou Aleatória)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="nova-chave-pix" placeholder="Digite a chave aqui..." style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+          <button class="btn btn-primary" onclick="adicionarChavePix()" style="width: auto; padding: 0 20px;">Salvar Chave</button>
+        </div>
       </div>
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
       <div class="form-group">
