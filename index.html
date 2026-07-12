@@ -597,6 +597,10 @@
       <label>Valor unitário (R$)</label>
       <input type="number" id="prod-valor" placeholder="0,00" step="0.01" min="0">
     </div>
+    <div class="form-group">
+      <label>URL da Imagem (Opcional)</label>
+      <input type="text" id="prod-imagem" placeholder="https://exemplo.com/foto.jpg">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
@@ -728,12 +732,17 @@ function salvarProduto() {
   const nome = document.getElementById('prod-nome').value.trim();
   const desc = document.getElementById('prod-descricao').value.trim();
   const valor = parseFloat(document.getElementById('prod-valor').value);
+  const imagem = document.getElementById('prod-imagem').value.trim();
+
   if (!nome) return toast('Informe o nome do produto');
   if (!valor || valor <= 0) return toast('Informe um valor válido');
 
   produtos.push({
     id: Date.now().toString(),
-    nome, descricao: desc, valor,
+    nome, 
+    descricao: desc, 
+    valor,
+    imagem: imagem || '',
     criadoEm: new Date().toISOString()
   });
   setData('vsm_produtos', produtos);
@@ -798,9 +807,13 @@ function renderCatalogo() {
     const precoFormatado = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const textoCompartilhar = `🧀 *Sabor Mineiro*%0A*${p.nome}*%0A${p.descricao || ''}%0A*Preço:* ${precoFormatado}`;
     
+    const imagemHtml = p.imagem 
+      ? `<img src="${p.imagem}" class="catalog-img" alt="${p.nome}" onerror="this.src=''; this.innerHTML='🧀';">`
+      : `<div class="catalog-img">🧀</div>`;
+    
     return `
       <div class="catalog-card">
-        <div class="catalog-img">🧀</div>
+        ${imagemHtml}
         <div class="catalog-info">
           <div class="catalog-nome">${p.nome}</div>
           <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
