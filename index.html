@@ -919,8 +919,8 @@ function renderCatalogo() {
         ${imagemHtml}
         <div class="catalog-info">
           <div class="catalog-nome">${p.nome}</div>
-          <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
           <div class="catalog-preco">${precoFormatado}</div>
+          <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
           <div class="catalog-actions" style="margin-bottom: 8px;">
             <button class="btn-catalog btn-share" style="background:#666;" onclick="abrirEditarProduto('${p.id}')">
               <span>🖼️ Add Foto</span>
