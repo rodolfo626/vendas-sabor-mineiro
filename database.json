@@ -1,5 +1,8 @@
 {
   "whatsapp": "5535991477688",
-  "produtos": [],
-  "ultimaSinc": "2026-07-12T18:31:11Z"
+  "produtos": [
+    { "id": 1, "nome": "Queijo Canastra", "preco": 45.00, "foto": "" },
+    { "id": 2, "nome": "Doce de Leite", "preco": 25.00, "foto": "" }
+  ],
+  "ultimaSinc": "2026-07-12T18:45:42Z"
 }
