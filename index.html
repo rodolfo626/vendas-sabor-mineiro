@@ -728,6 +728,22 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ========== PRODUTOS ==========
+let editingProdutoId = null;
+
+function abrirEditarProduto(id) {
+  const p = produtos.find(item => item.id === id);
+  if (!p) return;
+  
+  editingProdutoId = id;
+  document.getElementById('prod-nome').value = p.nome;
+  document.getElementById('prod-descricao').value = p.descricao || '';
+  document.getElementById('prod-valor').value = p.valor;
+  document.getElementById('prod-imagem').value = p.imagem || '';
+  
+  document.querySelector('#modal-produto h2').textContent = '✏️ Editar Produto';
+  openModal('modal-produto');
+}
+
 function salvarProduto() {
   const nome = document.getElementById('prod-nome').value.trim();
   const desc = document.getElementById('prod-descricao').value.trim();
@@ -737,23 +753,44 @@ function salvarProduto() {
   if (!nome) return toast('Informe o nome do produto');
   if (!valor || valor <= 0) return toast('Informe um valor válido');
 
-  produtos.push({
-    id: Date.now().toString(),
-    nome, 
-    descricao: desc, 
-    valor,
-    imagem: imagem || '',
-    criadoEm: new Date().toISOString()
-  });
-  setData('vsm_produtos', produtos);
+  if (editingProdutoId) {
+    const idx = produtos.findIndex(p => p.id === editingProdutoId);
+    if (idx !== -1) {
+      produtos[idx] = {
+        ...produtos[idx],
+        nome,
+        descricao: desc,
+        valor,
+        imagem: imagem || ''
+      };
+      toast('Produto atualizado! ✅');
+    }
+  } else {
+    produtos.push({
+      id: Date.now().toString(),
+      nome, 
+      descricao: desc, 
+      valor,
+      imagem: imagem || '',
+      criadoEm: new Date().toISOString()
+    });
+    toast('Produto cadastrado! ✅');
+  }
 
-  document.getElementById('prod-nome').value = '';
-  document.getElementById('prod-descricao').value = '';
-  document.getElementById('prod-valor').value = '';
+  setData('vsm_produtos', produtos);
+  resetModalProduto();
   closeModal('modal-produto');
   renderProdutosSelect();
   renderListaProdutos();
-  toast('Produto cadastrado! ✅');
+}
+
+function resetModalProduto() {
+  editingProdutoId = null;
+  document.getElementById('prod-nome').value = '';
+  document.getElementById('prod-descricao').value = '';
+  document.getElementById('prod-valor').value = '';
+  document.getElementById('prod-imagem').value = '';
+  document.querySelector('#modal-produto h2').textContent = '📦 Novo Produto';
 }
 
 function excluirProduto(id) {
@@ -786,7 +823,8 @@ function renderListaProdutos() {
         <div class="li-sub">${p.descricao || 'Sem descrição'} — R$ ${p.valor.toFixed(2).replace('.', ',')}</div>
       </div>
       <div class="li-actions">
-        <button class="btn btn-danger" onclick="excluirProduto('${p.id}')">🗑️</button>
+        <button class="btn btn-secondary btn-sm" onclick="abrirEditarProduto('${p.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirProduto('${p.id}')">🗑️</button>
       </div>
     </div>
   `).join('');
