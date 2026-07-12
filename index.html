@@ -855,7 +855,7 @@ function renderCatalogo() {
     
     const imagemHtml = p.imagem 
       ? `<img src="${p.imagem}" class="catalog-img" alt="${p.nome}" onerror="this.src=''; this.innerHTML='🧀';">`
-      : `<div class="catalog-img">🧀</div>`;
+      : `<div class="catalog-img" style="cursor:pointer;" onclick="abrirEditarProduto('${p.id}')"><span>🧀</span><br><small style="font-size:10px;">Clique p/ add foto</small></div>`;
     
     return `
       <div class="catalog-card">
@@ -864,6 +864,11 @@ function renderCatalogo() {
           <div class="catalog-nome">${p.nome}</div>
           <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
           <div class="catalog-preco">${precoFormatado}</div>
+          <div class="catalog-actions" style="margin-bottom: 8px;">
+            <button class="btn-catalog btn-share" style="background:#666;" onclick="abrirEditarProduto('${p.id}')">
+              <span>🖼️ Add Foto</span>
+            </button>
+          </div>
           <div class="catalog-actions">
             <button class="btn-catalog btn-wa" onclick="compartilharProdutoWA('${textoCompartilhar}')">
               <span>💬 ZAP</span>
