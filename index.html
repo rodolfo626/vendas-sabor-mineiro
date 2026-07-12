@@ -1582,7 +1582,7 @@ async function sincronizarLoja() {
     console.log('Buscando arquivo em:', url);
     
     const getFile = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token.trim()}` }
+      headers: { 'Authorization': `token ${token.trim()}` }
     });
 
     if (getFile.status === 401 || getFile.status === 403) {
@@ -1598,7 +1598,7 @@ async function sincronizarLoja() {
     const updateFile = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${token.trim()}`,
+        'Authorization': `token ${token.trim()}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
