@@ -1554,10 +1554,8 @@ function copiarLinkLoja() {
 
 async function sincronizarLoja() {
   const whatsapp = getData('vsm_whatsapp');
-  const token = getData('vsm_token_github') || document.getElementById('config-token').value.trim();
   
   if (!whatsapp) return toast('Configure o WhatsApp primeiro');
-  if (!token) return toast('GitHub Token é necessário');
 
   const btn = document.getElementById('btn-sinc');
   btn.disabled = true;
@@ -1573,33 +1571,36 @@ async function sincronizarLoja() {
   const fileName = 'database.json';
   const owner = 'rodolfo626';
   const repo = 'vendas-sabor-mineiro';
+  const token = getData('vsm_token_github') || document.getElementById('config-token').value.trim();
   
+  if (!token) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Sincronizar Catálogo Online';
+    return toast('GitHub Token é necessário na aba Config');
+  }
   try {
-    console.log('Iniciando sincronização...');
-    // 1. Tentar pegar o SHA do arquivo se ele já existir
     let sha = null;
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
-    console.log('Buscando arquivo em:', url);
     
-    const getFile = await fetch(url, {
-      headers: { 'Authorization': `token ${token.trim()}` }
-    });
+    try {
+      const getFile = await fetch(url, {
+        headers: { 
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      if (getFile.ok) {
+        const fileData = await getFile.json();
+        sha = fileData.sha;
+      }
+    } catch (e) {}
 
-    if (getFile.status === 401 || getFile.status === 403) {
-      return toast('Erro de permissão: Verifique o Token do GitHub');
-    }
-
-    if (getFile.ok) {
-      const fileData = await getFile.json();
-      sha = fileData.sha;
-    }
-
-    // 2. Criar ou atualizar o arquivo
     const updateFile = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `token ${token.trim()}`,
-        'Content-Type': 'application/json'
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
       },
       body: JSON.stringify({
         message: 'Atualização do catálogo online',
@@ -1612,12 +1613,11 @@ async function sincronizarLoja() {
       toast('Loja Sincronizada com Sucesso! 🚀');
       document.getElementById('loja-links').style.display = 'block';
     } else {
-      const err = await updateFile.json();
-      toast('Erro ao sincronizar: ' + (err.message || 'Erro desconhecido'));
+      const resData = await updateFile.json();
+      toast('Erro GitHub: ' + (resData.message || 'Erro desconhecido'));
     }
   } catch (e) {
-    console.error(e);
-    toast('Erro de conexão com o GitHub');
+    toast('Erro de sistema: ' + e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = '🚀 Sincronizar Catálogo Online';
