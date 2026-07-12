@@ -405,6 +405,7 @@
     <button onclick="showTab('historico')">📋 Histórico</button>
     <button onclick="showTab('clientes')">👥 Clientes</button>
     <button onclick="showTab('produtos')">📦 Produtos</button>
+    <button onclick="showTab('config')">⚙️ Config</button>
   </div>
 
   <!-- TAB: CATÁLOGO -->
@@ -579,6 +580,42 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB: CONFIG -->
+  <div id="tab-config" class="hidden">
+    <div class="card">
+      <h2>⚙️ Configurações da Loja</h2>
+      <div class="form-group">
+        <label>Seu WhatsApp (para receber pedidos)</label>
+        <input type="text" id="config-whatsapp" placeholder="Ex: 5531988887777">
+        <small style="color: #777;">Coloque o número completo com DDD (ex: 55319...)</small>
+      </div>
+      <button class="btn btn-primary" onclick="salvarConfiguracoes()">Salvar Configurações</button>
+      
+      <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--border);">
+      
+      <h3>🌐 Loja Online (Pedido do Cliente)</h3>
+      <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">
+        Para que seus clientes consigam ver seus produtos e fazer pedidos, você precisa sincronizar seu catálogo com a nuvem.
+      </p>
+      
+      <div class="form-group">
+        <label>GitHub Token (Necessário para sincronizar)</label>
+        <input type="password" id="config-token" placeholder="ghp_xxxxxxxxxxxx">
+        <small style="color: #777;">Seu token de acesso ao GitHub para atualizar o catálogo online.</small>
+      </div>
+      
+      <button class="btn btn-success" id="btn-sinc" onclick="sincronizarLoja()">🚀 Sincronizar Catálogo Online</button>
+      
+      <div id="loja-links" style="margin-top: 20px; display: none;">
+        <p style="font-weight: bold; color: var(--success); font-size: 0.9rem;">✅ Catálogo Sincronizado!</p>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="copiarLinkLoja()">🔗 Copiar Link da Loja</button>
+          <button class="btn btn-secondary btn-sm" onclick="window.open('loja.html', '_blank')">👁️ Ver Loja</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: NOVO PRODUTO -->
@@ -700,6 +737,11 @@ function init() {
   renderChavesPix();
   renderCatalogo();
   
+  // Configs
+  document.getElementById('config-whatsapp').value = getData('vsm_whatsapp') || '';
+  const savedToken = getData('vsm_token_github');
+  if (savedToken) document.getElementById('config-token').value = savedToken;
+
   if (document.getElementById('cfg-pix')) {
     document.getElementById('cfg-pix').value = pixKey;
     document.getElementById('cfg-pix-nome').value = pixNome;
@@ -1488,6 +1530,90 @@ function excluirVenda(vendaId, clienteId) {
   toast('Venda excluída com sucesso! 🗑️');
   if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
   renderHistorico(); // Atualiza a aba de histórico geral
+}
+
+// ========== CONFIGURAÇÕES E SINCRONIZAÇÃO ==========
+function salvarConfiguracoes() {
+  const whatsapp = document.getElementById('config-whatsapp').value.trim();
+  const token = document.getElementById('config-token').value.trim();
+  
+  if (!whatsapp) return toast('Informe o WhatsApp');
+  
+  setData('vsm_whatsapp', whatsapp);
+  if (token) setData('vsm_token_github', token);
+  
+  toast('Configurações salvas! ✅');
+}
+
+function copiarLinkLoja() {
+  const link = window.location.href.replace('index.html', 'loja.html');
+  navigator.clipboard.writeText(link).then(() => {
+    toast('Link da loja copiado! 🔗');
+  });
+}
+
+async function sincronizarLoja() {
+  const whatsapp = getData('vsm_whatsapp');
+  const token = getData('vsm_token_github') || document.getElementById('config-token').value.trim();
+  
+  if (!whatsapp) return toast('Configure o WhatsApp primeiro');
+  if (!token) return toast('GitHub Token é necessário');
+
+  const btn = document.getElementById('btn-sinc');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sincronizando...';
+
+  const payload = {
+    whatsapp: whatsapp,
+    produtos: produtos,
+    ultimaSinc: new Date().toISOString()
+  };
+
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+  const fileName = 'database.json';
+  const owner = 'rodolfo626';
+  const repo = 'vendas-sabor-mineiro';
+  
+  try {
+    // 1. Tentar pegar o SHA do arquivo se ele já existir
+    let sha = null;
+    const getFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    
+    if (getFile.ok) {
+      const fileData = await getFile.json();
+      sha = fileData.sha;
+    }
+
+    // 2. Criar ou atualizar o arquivo
+    const updateFile = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Atualização do catálogo online',
+        content: content,
+        sha: sha
+      })
+    });
+
+    if (updateFile.ok) {
+      toast('Loja Sincronizada com Sucesso! 🚀');
+      document.getElementById('loja-links').style.display = 'block';
+    } else {
+      const err = await updateFile.json();
+      toast('Erro ao sincronizar: ' + (err.message || 'Erro desconhecido'));
+    }
+  } catch (e) {
+    console.error(e);
+    toast('Erro de conexão com o GitHub');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Sincronizar Catálogo Online';
+  }
 }
 
 // ========== TOAST ==========
