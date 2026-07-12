@@ -584,7 +584,7 @@
 <!-- MODAL: NOVO PRODUTO -->
 <div class="modal-overlay" id="modal-produto">
   <div class="modal">
-    <h3>📦 Cadastrar Produto</h3>
+    <h2 style="margin-bottom: 15px;">📦 Novo Produto</h2>
     <div class="form-group">
       <label>Nome do produto</label>
       <input type="text" id="prod-nome" placeholder="Ex: Queijo Minas Frescal">
@@ -708,9 +708,17 @@ function copiarPixPagamento() {
 // ========== TABS ==========
 function showTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-  document.getElementById('tab-' + tab).classList.remove('hidden');
-  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  const targetTab = document.getElementById('tab-' + tab);
+  if (targetTab) targetTab.classList.remove('hidden');
+  
+  // Atualiza botões
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes(`'${tab}'`)) {
+      b.classList.add('active');
+    }
+  });
+
   if (tab === 'historico') renderHistorico();
   if (tab === 'clientes') { renderListaClientes(); renderHistoricoClientes(); }
   if (tab === 'produtos') renderListaProdutos();
