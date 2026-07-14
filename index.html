@@ -1345,19 +1345,8 @@ function compartilharComprovante(venda) {
   texto += `💰 TOTAL: R$ ${venda.total.toFixed(2).replace('.', ',')}\n\n`;
   texto += `Obrigado pela preferência! 🧀`;
 
-  if (navigator.share) {
-    navigator.share({
-      title: 'Comprovante Sabor Mineiro',
-      text: texto
-    }).catch(() => {
-      // Se falhar o share nativo (ex: desktop), copia pro clipboard
-      navigator.clipboard.writeText(texto);
-      toast('Comprovante copiado para o WhatsApp! 📋');
-    });
-  } else {
-    navigator.clipboard.writeText(texto);
-    toast('Comprovante copiado! Cole no WhatsApp do cliente. 📋');
-  }
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
 }
 
 // ========== HISTÓRICO ==========
