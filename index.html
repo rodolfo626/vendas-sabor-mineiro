@@ -504,6 +504,12 @@
           <div id="resumo-aprazo" style="font-size: 1.1rem; font-weight: 800; color: #B9770E;">R$ 0,00</div>
         </div>
       </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioGeral()">📄 Relatório Geral</button>
+        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioEncomendas()">📦 Encomendas</button>
+      </div>
+
       <h2>📋 Histórico de Vendas</h2>
       <div id="lista-historico">
         <div class="empty">
@@ -651,6 +657,18 @@
     <div id="hist-cli-conteudo"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-hist-cliente')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RELATÓRIO -->
+<div class="modal-overlay" id="modal-relatorio">
+  <div class="modal">
+    <h3 id="relatorio-titulo">📄 Relatório</h3>
+    <div id="relatorio-conteudo" style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; border: 1px solid var(--border); margin: 15px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-relatorio')">Fechar</button>
+      <button class="btn btn-primary" onclick="copiarRelatorio()">📋 Copiar Texto</button>
     </div>
   </div>
 </div>
@@ -1492,6 +1510,75 @@ function excluirVenda(vendaId, clienteId) {
   toast('Venda excluída com sucesso! 🗑️');
   if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
   renderHistorico(); // Atualiza a aba de histórico geral
+}
+
+// ========== RELATÓRIOS ==========
+function gerarRelatorioGeral() {
+  if (vendas.length === 0) return toast('Nenhuma venda para gerar relatório');
+  
+  let texto = `📊 RELATÓRIO GERAL - SABOR MINEIRO\n`;
+  texto += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
+  texto += `----------------------------------\n\n`;
+  
+  let totalGeral = 0;
+  let totalAvista = 0;
+  let totalAprazo = 0;
+  
+  vendas.forEach(v => {
+    const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
+    texto += `• ${dataFmt} - ${v.clienteNome}\n`;
+    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')} (${v.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}${v.encomenda ? ' - Encomenda' : ''})\n`;
+    
+    totalGeral += v.total;
+    if (v.pagamento === 'avista') totalAvista += v.total;
+    else totalAprazo += v.total;
+  });
+  
+  texto += `\n----------------------------------\n`;
+  texto += `💰 TOTAL GERAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}\n`;
+  texto += `💵 À VISTA: R$ ${totalAvista.toFixed(2).replace('.', ',')}\n`;
+  texto += `📅 A PRAZO: R$ ${totalAprazo.toFixed(2).replace('.', ',')}\n`;
+  
+  exibirRelatorio('Relatório Geral', texto);
+}
+
+function gerarRelatorioEncomendas() {
+  const encomendas = vendas.filter(v => v.encomenda);
+  if (encomendas.length === 0) return toast('Nenhuma encomenda encontrada');
+  
+  let texto = `📦 RELATÓRIO DE ENCOMENDAS\n`;
+  texto += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
+  texto += `----------------------------------\n\n`;
+  
+  let totalEnc = 0;
+  
+  encomendas.forEach(v => {
+    const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
+    texto += `• ${v.clienteNome} (${dataFmt})\n`;
+    v.produtos.forEach(p => {
+      texto += `  - ${p.quantidade}x ${p.produtoNome}\n`;
+    });
+    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')}\n\n`;
+    totalEnc += v.total;
+  });
+  
+  texto += `----------------------------------\n`;
+  texto += `✅ TOTAL ENCOMENDAS: R$ ${totalEnc.toFixed(2).replace('.', ',')}\n`;
+  
+  exibirRelatorio('Relatório de Encomendas', texto);
+}
+
+function exibirRelatorio(titulo, texto) {
+  document.getElementById('relatorio-titulo').textContent = '📄 ' + titulo;
+  document.getElementById('relatorio-conteudo').textContent = texto;
+  openModal('modal-relatorio');
+}
+
+function copiarRelatorio() {
+  const texto = document.getElementById('relatorio-conteudo').textContent;
+  navigator.clipboard.writeText(texto).then(() => {
+    toast('Relatório copiado para a área de transferência! 📋');
+  });
 }
 
 // ========== TOAST ==========
