@@ -1372,9 +1372,13 @@ function renderHistorico() {
       ? '<span class="h-badge badge-vista">💵 À Vista</span>'
       : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
     
-    const badgeEncomenda = v.encomenda ? '<span class="h-badge badge-encomenda">📦 Encomenda</span>' : '';
+    const badgeEncomenda = v.encomenda 
+      ? (v.entregue ? '<span class="h-badge" style="background:#E8F8F5; color:#1E8449;">✅ Entregue</span>' : '<span class="h-badge badge-encomenda">📦 Encomenda</span>')
+      : '';
     
-    // Suporte para vendas antigas (1 produto) e novas (array de produtos)
+    const btnEntregue = (v.encomenda && !v.entregue)
+      ? `<button class="btn btn-success" onclick="marcarComoEntregue('${v.id}')" style="padding:4px 8px; font-size:0.7rem; margin-right:4px;">🚚 Entregue</button>`
+      : '';
     let listaProdutosHtml = '';
     if (v.produtos && Array.isArray(v.produtos)) {
       listaProdutosHtml = v.produtos.map(p => `<div>${p.produtoNome} — ${p.quantidade}x R$ ${p.valorUnitario.toFixed(2).replace('.', ',')}</div>`).join('');
@@ -1397,7 +1401,10 @@ function renderHistorico() {
             ${badge}
             ${badgeEncomenda}
           </div>
-          <button class="btn btn-danger" onclick="excluirVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">🗑️ Excluir</button>
+          <div style="display: flex; gap: 4px;">
+            ${btnEntregue}
+            <button class="btn btn-danger" onclick="excluirVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">🗑️ Excluir</button>
+          </div>
         </div>
       </div>
     `;
@@ -1482,7 +1489,13 @@ function verHistoricoCliente(clienteId) {
         ? '<span class="h-badge badge-vista">💵 À Vista</span>'
         : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
       
-      const badgeEncomenda = v.encomenda ? '<span class="h-badge badge-encomenda">📦 Encomenda</span>' : '';
+      const badgeEncomenda = v.encomenda 
+        ? (v.entregue ? '<span class="h-badge" style="background:#E8F8F5; color:#1E8449;">✅ Entregue</span>' : '<span class="h-badge badge-encomenda">📦 Encomenda</span>')
+        : '';
+      
+      const btnEntregue = (v.encomenda && !v.entregue)
+        ? `<button class="btn btn-success" onclick="marcarComoEntregue('${v.id}', '${clienteId}')" style="padding:4px 8px; font-size:0.7rem;">🚚</button>`
+        : '';
 
       // Suporte para vendas antigas (1 produto) e novas (array de produtos)
       let listaProdutosHtml = '';
@@ -1504,6 +1517,7 @@ function verHistoricoCliente(clienteId) {
             <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
               ${badge}
               ${badgeEncomenda}
+              ${btnEntregue}
               <button class="btn btn-danger" onclick="excluirVenda('${v.id}', '${clienteId}')" style="padding:4px 8px; font-size:0.7rem;">🗑️</button>
             </div>
             ${v.pagamento === 'aprazo' ? `<button class="btn btn-success btn-sm" onclick="receberVenda('${v.id}', '${clienteId}')" style="padding:4px 10px; font-size:0.7rem;">💰 Receber</button>` : ''}
@@ -1526,6 +1540,18 @@ function receberVenda(vendaId, clienteId) {
     toast('Pagamento recebido! 💰');
     if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
     renderHistorico(); // Atualiza a aba de histórico geral
+  }
+}
+
+function marcarComoEntregue(vendaId, clienteId) {
+  if (!confirm('Deseja marcar esta encomenda como ENTREGUE?')) return;
+  const vendaIndex = vendas.findIndex(v => v.id === vendaId);
+  if (vendaIndex > -1) {
+    vendas[vendaIndex].entregue = true;
+    setData('vsm_vendas', vendas);
+    toast('Encomenda entregue! 🚚✅');
+    if (clienteId) verHistoricoCliente(clienteId);
+    renderHistorico();
   }
 }
 
