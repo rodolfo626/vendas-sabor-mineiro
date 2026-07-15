@@ -1578,8 +1578,13 @@ function gerarRelatorioGeral() {
   
   vendas.forEach(v => {
     const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
+    let infoExtra = '';
+    if (v.encomenda) {
+      infoExtra = v.entregue ? ' - Encomenda Entregue ✅' : ' - Encomenda Pendente 📦';
+    }
+    
     texto += `• ${dataFmt} - ${v.clienteNome}\n`;
-    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')} (${v.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}${v.encomenda ? ' - Encomenda' : ''})\n`;
+    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')} (${v.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}${infoExtra})\n`;
     
     totalGeral += v.total;
     if (v.pagamento === 'avista') totalAvista += v.total;
@@ -1595,10 +1600,10 @@ function gerarRelatorioGeral() {
 }
 
 function gerarRelatorioEncomendas() {
-  const encomendas = vendas.filter(v => v.encomenda);
-  if (encomendas.length === 0) return toast('Nenhuma encomenda encontrada');
+  const encomendas = vendas.filter(v => v.encomenda && !v.entregue);
+  if (encomendas.length === 0) return toast('Nenhuma encomenda pendente encontrada');
   
-  let texto = `📦 RELATÓRIO DE ENCOMENDAS\n`;
+  let texto = `📦 RELATÓRIO DE ENCOMENDAS PENDENTES\n`;
   texto += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
   texto += `----------------------------------\n\n`;
   
