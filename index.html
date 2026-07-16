@@ -420,6 +420,15 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB: VENDA -->
+  <div id="tab-venda">
+    <div class="card" id="card-importar" style="background: #f0f7ff; border: 1px dashed #007bff;">
+      <h3 style="margin-top:0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">📥 Importar Pedido <small style="font-weight:normal; font-size:11px;">(WhatsApp)</small></h3>
+      <textarea id="txt-importar" placeholder="Cole aqui o texto do comprovante recebido..." style="width:100%; height:60px; font-size:0.8rem; margin-bottom:8px; border-radius:8px; border:1px solid #ccc; padding:8px;"></textarea>
+      <button class="btn btn-secondary btn-sm" onclick="importarPedidoTexto()" style="width: 100%;">📥 Processar e Adicionar ao Carrinho</button>
+    </div>
+
     <div class="card">
       <h2>📦 Adicionar Produto</h2>
       <div class="select-row">
@@ -715,6 +724,10 @@ function init() {
     
     const btnShareTop = document.querySelector('button[onclick="compartilharAppCompleto()"]');
     if (btnShareTop) btnShareTop.style.display = 'none';
+
+    // Esconder card de importar no modo cliente
+    const cardImportar = document.getElementById('card-importar');
+    if (cardImportar) cardImportar.style.display = 'none';
 
     // Esconder card de seleção de cliente na venda (privacidade)
     const cardsVenda = document.querySelectorAll('#tab-venda .card');
@@ -1365,6 +1378,59 @@ function updateTotal() {
 }
 
 // ========== FINALIZAR VENDA ==========
+function importarPedidoTexto() {
+  const texto = document.getElementById('txt-importar').value.trim();
+  if (!texto) return toast('Cole o texto do pedido primeiro');
+
+  // Regex para capturar dados básicos
+  const nomeMatch = texto.match(/Cliente:\s*(.*)/i);
+  const produtosMatches = [...texto.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
+
+  if (produtosMatches.length === 0) {
+    return toast('Não foi possível identificar os produtos no texto.');
+  }
+
+  // Tentar encontrar o cliente pelo nome
+  if (nomeMatch) {
+    const nomeCli = nomeMatch[1].trim();
+    const clienteExistente = clientes.find(c => c.nome.toLowerCase() === nomeCli.toLowerCase());
+    if (clienteExistente) {
+      document.getElementById('sel-cliente').value = clienteExistente.id;
+    } else {
+      toast('Cliente "' + nomeCli + '" não encontrado. Cadastre-o manualmente.');
+    }
+  }
+
+  // Adicionar produtos ao carrinho
+  let adicionados = 0;
+  produtosMatches.forEach(m => {
+    const qtd = parseInt(m[1]);
+    const nomeProd = m[2].trim();
+    
+    const produto = produtos.find(p => p.nome.toLowerCase() === nomeProd.toLowerCase());
+    if (produto) {
+      carrinho.push({
+        id: Date.now() + Math.random(),
+        produtoId: produto.id,
+        produtoNome: produto.nome,
+        quantidade: qtd,
+        valorUnitario: produto.valor,
+        total: produto.valor * qtd
+      });
+      adicionados++;
+    }
+  });
+
+  if (adicionados > 0) {
+    renderCarrinho();
+    updateTotal();
+    document.getElementById('txt-importar').value = '';
+    toast(`${adicionados} produtos importados para o carrinho! 🛒`);
+  } else {
+    toast('Nenhum produto correspondente encontrado no catálogo.');
+  }
+}
+
 function finalizarVenda() {
   let clienteId = document.getElementById('sel-cliente').value;
   const ehEncomenda = document.getElementById('chk-encomenda').checked;
