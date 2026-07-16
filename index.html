@@ -716,6 +716,15 @@ function init() {
     const btnShareTop = document.querySelector('button[onclick="compartilharAppCompleto()"]');
     if (btnShareTop) btnShareTop.style.display = 'none';
 
+    // Esconder card de seleção de cliente na venda (privacidade)
+    const cardsVenda = document.querySelectorAll('#tab-venda .card');
+    cardsVenda.forEach(card => {
+      const h2 = card.querySelector('h2');
+      if (h2 && h2.textContent.includes('Cliente')) {
+        card.style.display = 'none';
+      }
+    });
+
     // Verificar se o cliente já se identificou
     const clienteLogado = getData('vsm_cliente_identificado');
     if (!clienteLogado) {
@@ -1081,18 +1090,22 @@ function salvarCliente() {
   const obs = document.getElementById('cli-obs').value.trim();
   if (!nome) return toast('Informe o nome do cliente');
 
+  let clienteFinal = null;
+
   if (editandoClienteId) {
     const idx = clientes.findIndex(c => c.id === editandoClienteId);
     if (idx > -1) {
       clientes[idx] = { ...clientes[idx], nome, telefone: tel, endereco: end, observacoes: obs };
+      clienteFinal = clientes[idx];
       toast('Cliente atualizado! 📝');
     }
   } else {
-    clientes.push({
+    clienteFinal = {
       id: Date.now().toString(),
       nome, telefone: tel, endereco: end, observacoes: obs,
       criadoEm: new Date().toISOString()
-    });
+    };
+    clientes.push(clienteFinal);
     toast('Cliente cadastrado! ✅');
   }
 
@@ -1101,7 +1114,7 @@ function salvarCliente() {
   // Se estiver no modo cliente, salvar identificação local
   const params = new URLSearchParams(window.location.search);
   if (params.get('modo') === 'cliente') {
-    setData('vsm_cliente_identificado', { nome, telefone: tel, endereco: end });
+    setData('vsm_cliente_identificado', clienteFinal);
     toast('Bem-vindo, ' + nome + '! 😊');
   }
 
@@ -1109,11 +1122,6 @@ function salvarCliente() {
   renderClientesSelect();
   renderListaClientes();
   renderHistoricoClientes();
-  
-  if (document.getElementById('cfg-pix')) {
-    document.getElementById('cfg-pix').value = pixKey;
-    document.getElementById('cfg-pix-nome').value = pixNome;
-  }
 }
 
 function renderChavesPix() {
@@ -1358,13 +1366,23 @@ function updateTotal() {
 
 // ========== FINALIZAR VENDA ==========
 function finalizarVenda() {
-  const clienteId = document.getElementById('sel-cliente').value;
+  let clienteId = document.getElementById('sel-cliente').value;
   const ehEncomenda = document.getElementById('chk-encomenda').checked;
 
+  // No modo cliente, usar a identificação salva
+  const params = new URLSearchParams(window.location.search);
+  const clienteLogado = getData('vsm_cliente_identificado');
+  
+  if (params.get('modo') === 'cliente' && clienteLogado) {
+    clienteId = clienteLogado.id;
+  }
+
   if (carrinho.length === 0) return toast('Adicione produtos ao carrinho');
-  if (!clienteId) return toast('Selecione um cliente');
+  if (!clienteId) return toast('Selecione um cliente ou identifique-se');
 
   const cliente = clientes.find(c => c.id === clienteId);
+  if (!cliente) return toast('Cliente não encontrado');
+
   const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
 
   const novaVenda = {
