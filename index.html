@@ -399,11 +399,16 @@
 
 <div class="container" id="main-container">
   <!-- TABS -->
-    <button class="active" onclick="showTab('venda')">🛒 Venda</button>
-    <button onclick="showTab('catalogo')">📖 Catálogo</button>
-    <button onclick="showTab('historico')">📋 Histórico</button>
-    <button onclick="showTab('clientes')">👥 Clientes</button>
-    <button onclick="showTab('produtos')">📦 Produtos</button>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div class="tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="active" onclick="showTab('venda')">🛒 Venda</button>
+      <button onclick="showTab('catalogo')">📖 Catálogo</button>
+      <button onclick="showTab('historico')">📋 Histórico</button>
+      <button onclick="showTab('clientes')">👥 Clientes</button>
+      <button onclick="showTab('produtos')">📦 Produtos</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
+  </div>
 
   <!-- TAB: CATÁLOGO -->
   <div id="tab-catalogo" class="hidden">
@@ -1010,6 +1015,27 @@ function compartilharGeral(nome, desc, preco) {
     navigator.clipboard.writeText(texto);
     toast('Informações copiadas! 📋');
   }
+}
+
+function compartilharAppCompleto() {
+  if (produtos.length === 0) {
+    toast('Nenhum produto cadastrado para compartilhar.');
+    return;
+  }
+
+  let texto = `🧀 *SABOR MINEIRO - CATÁLOGO*%0A`;
+  texto += `Confira nossos produtos deliciosos:%0A%0A`;
+
+  produtos.forEach(p => {
+    const preco = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    texto += `• *${p.nome}* - ${preco}%0A`;
+  });
+
+  const link = window.location.href;
+  texto += `%0A📥 *Acesse nosso app e faça seu pedido:*%0A${link}`;
+
+  const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
+  window.open(urlWa, '_blank');
 }
 
 // ========== CLIENTES ==========
