@@ -1402,23 +1402,59 @@ function importarPedidoTexto() {
   const texto = document.getElementById('txt-importar').value.trim();
   if (!texto) return toast('Cole o texto do pedido primeiro');
 
-  // Regex para capturar dados básicos
+  // Regex para capturar dados
   const nomeMatch = texto.match(/Cliente:\s*(.*)/i);
+  const telMatch = texto.match(/Telefone:\s*(.*)/i) || texto.match(/WhatsApp:\s*(.*)/i);
+  const endMatch = texto.match(/Endereço de Entrega:\s*([\s\S]*?)(?=\n\*|$)/i) || texto.match(/Endereço:\s*(.*)/i);
   const produtosMatches = [...texto.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
 
   if (produtosMatches.length === 0) {
-    return toast('Não foi possível identificar os produtos no texto.');
+    // Tentar capturar formato de produto único
+    const prodUnicoMatch = texto.match(/\*(.*?)\*\n.*\n\*Preço:\*\s*R\$\s*([\d,.]+)/i);
+    if (prodUnicoMatch) {
+      const nomeP = prodUnicoMatch[1].trim();
+      const produto = produtos.find(p => p.nome.toLowerCase() === nomeP.toLowerCase());
+      if (produto) {
+        addCarrinhoRapido(produto.id);
+        document.getElementById('txt-importar').value = '';
+        return;
+      }
+    }
+    return toast('Não foi possível identificar produtos no texto.');
   }
 
-  // Tentar encontrar o cliente pelo nome
+  // Lógica de Cliente (Identificar ou Cadastrar Automático)
   if (nomeMatch) {
     const nomeCli = nomeMatch[1].trim();
-    const clienteExistente = clientes.find(c => c.nome.toLowerCase() === nomeCli.toLowerCase());
-    if (clienteExistente) {
-      document.getElementById('sel-cliente').value = clienteExistente.id;
+    const telCli = telMatch ? telMatch[1].trim() : '';
+    const endCli = endMatch ? endMatch[1].trim() : '';
+    
+    let cliente = clientes.find(c => c.nome.toLowerCase() === nomeCli.toLowerCase());
+    
+    if (!cliente) {
+      // Cadastro automático se não existir
+      cliente = {
+        id: Date.now().toString(),
+        nome: nomeCli,
+        telefone: telCli,
+        endereco: endCli,
+        observacoes: 'Cadastrado via importação automática',
+        criadoEm: new Date().toISOString()
+      };
+      clientes.push(cliente);
+      setData('vsm_clientes', clientes);
+      renderClientesSelect();
+      renderListaClientes();
+      toast('Novo cliente "' + nomeCli + '" cadastrado automaticamente! ✨');
     } else {
-      toast('Cliente "' + nomeCli + '" não encontrado. Cadastre-o manualmente.');
+      // Atualizar endereço se o importado for mais completo
+      if (endCli && endCli.length > (cliente.endereco || '').length) {
+        cliente.endereco = endCli;
+        setData('vsm_clientes', clientes);
+        toast('Endereço de ' + nomeCli + ' atualizado.');
+      }
     }
+    document.getElementById('sel-cliente').value = cliente.id;
   }
 
   // Adicionar produtos ao carrinho
@@ -1445,9 +1481,7 @@ function importarPedidoTexto() {
     renderCarrinho();
     updateTotal();
     document.getElementById('txt-importar').value = '';
-    toast(`${adicionados} produtos importados para o carrinho! 🛒`);
-  } else {
-    toast('Nenhum produto correspondente encontrado no catálogo.');
+    toast(`${adicionados} produtos adicionados ao carrinho! 🛒`);
   }
 }
 
