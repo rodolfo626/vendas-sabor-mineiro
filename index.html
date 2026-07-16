@@ -699,6 +699,23 @@ let pagamentoSelecionado = 'avista';
 // ========== INIT ==========
 function init() {
   const params = new URLSearchParams(window.location.search);
+  
+  // Modo Catálogo (Cliente)
+  if (params.has('modo') && params.get('modo') === 'cliente') {
+    document.body.classList.add('modo-cliente');
+    showTab('catalogo');
+    // Esconder botões administrativos da tab bar
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      const txt = btn.textContent.toLowerCase();
+      if (txt.includes('histórico') || txt.includes('clientes') || txt.includes('produtos')) {
+        btn.style.display = 'none';
+      }
+    });
+    // Esconder botão de compartilhar app no topo
+    const btnShareTop = document.querySelector('button[onclick="compartilharAppCompleto()"]');
+    if (btnShareTop) btnShareTop.style.display = 'none';
+  }
+
   if (params.has('pago')) {
     document.getElementById('main-container').style.display = 'none';
     document.getElementById('view-pagamento').style.display = 'flex';
@@ -1031,8 +1048,10 @@ function compartilharAppCompleto() {
     texto += `• *${p.nome}* - ${preco}%0A`;
   });
 
-  const link = window.location.href;
-  texto += `%0A📥 *Acesse nosso app e faça seu pedido:*%0A${link}`;
+  const baseLink = window.location.origin + window.location.pathname;
+  const linkCliente = `${baseLink}?modo=cliente`;
+  
+  texto += `%0A📥 *Acesse nosso catálogo e faça seu pedido:*%0A${linkCliente}`;
 
   const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
   window.open(urlWa, '_blank');
