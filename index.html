@@ -413,7 +413,12 @@
   <!-- TAB: CATÁLOGO -->
   <div id="tab-catalogo" class="hidden">
     <div class="card">
-      <h2>📖 Catálogo de Produtos</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2 style="margin: 0;">📖 Catálogo de Produtos</h2>
+        <button class="btn btn-wa btn-sm" onclick="compartilharListaCompletaWA()" style="display: flex; align-items: center; gap: 5px; background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+          <span style="font-size: 1rem;">💬</span> Compartilhar Lista
+        </button>
+      </div>
       <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 15px;">Compartilhe seus produtos com os clientes no WhatsApp.</p>
       <div id="grid-catalogo" class="catalog-grid">
         <!-- Itens do catálogo -->
@@ -1132,6 +1137,28 @@ function addCarrinhoRapido(id) {
 
 function compartilharProdutoWA(texto) {
   window.open(`https://wa.me/?text=${texto}`, '_blank');
+}
+
+function compartilharListaCompletaWA() {
+  if (produtos.length === 0) {
+    toast('Nenhum produto cadastrado para compartilhar.');
+    return;
+  }
+
+  let texto = `🧀 *SABOR MINEIRO - TABELA DE PREÇOS*%0A%0A`;
+  
+  produtos.forEach(p => {
+    const preco = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    texto += `*${p.nome}* - ${preco}%0A`;
+  });
+
+  const baseLink = window.location.origin + window.location.pathname;
+  const linkCliente = `${baseLink}?modo=cliente`;
+  
+  texto += `%0A👉 *Peça pelo nosso catálogo online:*%0A${linkCliente}`;
+
+  const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
+  window.open(urlWa, '_blank');
 }
 
 function compartilharGeral(nome, desc, preco) {
