@@ -704,16 +704,30 @@ function init() {
   if (params.has('modo') && params.get('modo') === 'cliente') {
     document.body.classList.add('modo-cliente');
     showTab('catalogo');
-    // Esconder botões administrativos da tab bar
+    
+    // Esconder botões administrativos
     document.querySelectorAll('.tabs button').forEach(btn => {
       const txt = btn.textContent.toLowerCase();
       if (txt.includes('histórico') || txt.includes('clientes') || txt.includes('produtos')) {
         btn.style.display = 'none';
       }
     });
-    // Esconder botão de compartilhar app no topo
+    
     const btnShareTop = document.querySelector('button[onclick="compartilharAppCompleto()"]');
     if (btnShareTop) btnShareTop.style.display = 'none';
+
+    // Verificar se o cliente já se identificou
+    const clienteLogado = getData('vsm_cliente_identificado');
+    if (!clienteLogado) {
+      setTimeout(() => {
+        const modal = document.getElementById('modal-cliente');
+        document.getElementById('modal-cliente-titulo').textContent = '🧀 Seja bem-vindo! Identifique-se:';
+        // Esconder o botão cancelar para obrigar o cadastro
+        const btnCancel = modal.querySelector('.btn-outline');
+        if (btnCancel) btnCancel.style.display = 'none';
+        modal.classList.add('active');
+      }, 1000);
+    }
   }
 
   if (params.has('pago')) {
@@ -1083,6 +1097,14 @@ function salvarCliente() {
   }
 
   setData('vsm_clientes', clientes);
+  
+  // Se estiver no modo cliente, salvar identificação local
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('modo') === 'cliente') {
+    setData('vsm_cliente_identificado', { nome, telefone: tel, endereco: end });
+    toast('Bem-vindo, ' + nome + '! 😊');
+  }
+
   fecharModalCliente();
   renderClientesSelect();
   renderListaClientes();
