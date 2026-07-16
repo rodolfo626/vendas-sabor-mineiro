@@ -1031,23 +1031,43 @@ function renderCatalogo() {
           <div class="catalog-nome">${p.nome}</div>
           <div class="catalog-preco">${precoFormatado}</div>
           <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
-          <div class="catalog-actions" style="margin-bottom: 8px;">
-            <button class="btn-catalog btn-share" style="background:#666;" onclick="abrirEditarProduto('${p.id}')">
-              <span>🖼️ Add Foto</span>
+          
+          <div class="catalog-actions" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn btn-success btn-sm" onclick="addCarrinhoRapido('${p.id}')" style="font-size: 0.8rem; width: 100%;">
+              🛒 Adicionar ao Pedido
             </button>
-          </div>
-          <div class="catalog-actions">
-            <button class="btn-catalog btn-wa" onclick="compartilharProdutoWA('${textoCompartilhar}')">
-              <span>💬 ZAP</span>
-            </button>
-            <button class="btn-catalog btn-share" onclick="compartilharGeral('${p.nome}', '${p.descricao}', '${precoFormatado}')">
-              <span>🔗 Link</span>
-            </button>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-catalog btn-wa" onclick="compartilharProdutoWA('${textoCompartilhar}')" style="flex: 1;">
+                <span>💬 ZAP</span>
+              </button>
+              <button class="btn-catalog btn-share" onclick="compartilharGeral('${p.nome}', '${p.descricao}', '${precoFormatado}')" style="flex: 1;">
+                <span>🔗 Link</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function addCarrinhoRapido(id) {
+  const produto = produtos.find(p => p.id === id);
+  if (!produto) return;
+
+  const item = {
+    id: Date.now() + Math.random(),
+    produtoId: produto.id,
+    produtoNome: produto.nome,
+    quantidade: 1,
+    valorUnitario: produto.valor,
+    total: produto.valor
+  };
+
+  carrinho.push(item);
+  renderCarrinho();
+  updateTotal();
+  toast(`1x ${produto.nome} adicionado! 🧀`);
 }
 
 function compartilharProdutoWA(texto) {
