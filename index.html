@@ -586,6 +586,16 @@
 
   <!-- TAB: PRODUTOS -->
   <div id="tab-produtos" class="hidden">
+    <!-- NOVO: Importar Lista de Produtos -->
+    <div class="card" style="background: #fff8f0; border: 1px dashed #ffa500;">
+      <h3 style="margin-top:0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">📥 Importar Lista de Produtos</h3>
+      <p style="font-size: 0.75rem; margin-bottom: 8px; color: #666;">
+        Cole uma lista no formato: <strong>Produto - Preço</strong> (um por linha)
+      </p>
+      <textarea id="txt-importar-produtos" placeholder="Ex:&#10;Queijo Canastra - 45,00&#10;Doce de Leite - 20,00" style="width:100%; height:80px; font-size:0.8rem; margin-bottom:8px; border-radius:8px; border:1px solid #ccc; padding:8px;"></textarea>
+      <button class="btn btn-secondary btn-sm" onclick="importarListaProdutos()" style="width: 100%; background: #ffa500; border-color: #ffa500;">📥 Processar e Cadastrar Produtos</button>
+    </div>
+
     <div class="card">
       <h2>📦 Produtos Cadastrados</h2>
       <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:14px;" onclick="openModal('modal-produto')">＋ Cadastrar Produto</button>
@@ -913,6 +923,56 @@ function removerFoto() {
   document.getElementById('preview-container').style.display = 'none';
   document.getElementById('btn-remover-foto').style.display = 'none';
   document.getElementById('input-foto').value = '';
+}
+
+function importarListaProdutos() {
+  const texto = document.getElementById('txt-importar-produtos').value.trim();
+  if (!texto) return toast('Cole a lista de produtos primeiro');
+
+  const linhas = texto.split('\n');
+  let cadastrados = 0;
+  let pulados = 0;
+
+  linhas.forEach(linha => {
+    // Regex para capturar Produto - Preço ou Produto R$ Preço
+    const match = linha.match(/^(.*?)(?:\s*-\s*|\s+R\$\s*|\s+)([\d,.]+)$/);
+    
+    if (match) {
+      const nome = match[1].trim();
+      const precoStr = match[2].trim().replace(',', '.');
+      const preco = parseFloat(precoStr);
+
+      if (nome && !isNaN(preco)) {
+        // Verificar se já existe (evitar duplicados)
+        const existe = produtos.find(p => p.nome.toLowerCase() === nome.toLowerCase());
+        if (!existe) {
+          produtos.push({
+            id: Date.now().toString() + Math.random(),
+            nome: nome,
+            descricao: 'Produto importado via lista',
+            valor: preco,
+            imagem: '',
+            criadoEm: new Date().toISOString()
+          });
+          cadastrados++;
+        } else {
+          pulados++;
+        }
+      }
+    }
+  });
+
+  if (cadastrados > 0) {
+    setData('vsm_produtos', produtos);
+    renderListaProdutos();
+    renderProdutosSelect();
+    document.getElementById('txt-importar-produtos').value = '';
+    toast(`${cadastrados} produtos cadastrados! ✅` + (pulados > 0 ? ` (${pulados} já existiam)` : ''));
+  } else if (pulados > 0) {
+    toast(`Nenhum produto novo. ${pulados} já estavam na lista.`);
+  } else {
+    toast('Não foi possível identificar produtos. Use o formato: Nome - Preço');
+  }
 }
 
 function salvarProduto() {
