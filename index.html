@@ -1325,15 +1325,40 @@ function finalizarVenda() {
   
   // Sugerir ações de comprovante
   setTimeout(() => {
-    const acao = confirm('Deseja compartilhar o comprovante no WhatsApp?\n(Clique em Cancelar para ver a opção de Imprimir)');
+    const acao = confirm('Deseja COMPARTILHAR no WhatsApp?\n(Cancelar para ver mais opções)');
     if (acao) {
       compartilharComprovante(novaVenda);
     } else {
-      if (confirm('Deseja imprimir o comprovante de venda?')) {
-        imprimirVendaManual(novaVenda);
+      const acao2 = confirm('Deseja VISUALIZAR o comprovante antes de imprimir?');
+      if (acao2) {
+        visualizarComprovante(novaVenda);
+      } else {
+        if (confirm('Deseja apenas IMPRIMIR o comprovante direto?')) {
+          imprimirVendaManual(novaVenda);
+        }
       }
     }
   }, 500);
+}
+
+function visualizarComprovante(venda) {
+  let texto = `🧾 COMPROVANTE DE VENDA - SABOR MINEIRO\n`;
+  texto += `----------------------------------\n`;
+  texto += `Cliente: ${venda.clienteNome}\n`;
+  texto += `Data: ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
+  texto += `Pagamento: ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
+  if (venda.encomenda) texto += `Status: 📦 Encomenda${venda.entregue ? ' Entregue ✅' : ''}\n`;
+  texto += `----------------------------------\n`;
+  
+  venda.produtos.forEach(p => {
+    texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+  });
+  
+  texto += `----------------------------------\n`;
+  texto += `💰 TOTAL: R$ ${venda.total.toFixed(2).replace('.', ',')}\n\n`;
+  texto += `Obrigado pela preferência! 🧀`;
+
+  exibirRelatorio('Comprovante de Venda', texto);
 }
 
 function imprimirVendaManual(venda) {
