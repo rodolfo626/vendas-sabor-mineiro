@@ -1995,6 +1995,7 @@ function gerarRelatorioEncomendas() {
     v.produtos.forEach(p => {
       texto += `  - ${p.quantidade}x ${p.produtoNome}\n`;
     });
+    if (v.observacoes) texto += `  📝 Obs: ${v.observacoes}\n`;
     texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')}\n\n`;
     totalEnc += v.total;
   });
