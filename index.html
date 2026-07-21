@@ -480,6 +480,11 @@
       </div>
 
       <div class="form-group" style="margin-top: 14px;">
+        <label>Observações do Pedido</label>
+        <textarea id="venda-obs" placeholder="Ex: Entregar após as 18h, troco para 50, etc..." style="width:100%; height:60px; font-size:0.8rem; border-radius:8px; border:1px solid #ccc; padding:8px;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
           <input type="checkbox" id="chk-encomenda" style="width: 18px; height: 18px;">
           <span>📦 Marcar como Encomenda</span>
@@ -1591,6 +1596,7 @@ function finalizarVenda() {
   if (!cliente) return toast('Cliente não encontrado');
 
   const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
+  const obs = document.getElementById('venda-obs').value.trim();
 
   const novaVenda = {
     id: Date.now().toString(),
@@ -1600,6 +1606,7 @@ function finalizarVenda() {
     pagamento: pagamentoSelecionado,
     encomenda: ehEncomenda,
     total: totalGeral,
+    observacoes: obs,
     data: new Date().toISOString()
   };
 
@@ -1610,6 +1617,7 @@ function finalizarVenda() {
   carrinho = [];
   document.getElementById('sel-cliente').value = '';
   document.getElementById('chk-encomenda').checked = false;
+  document.getElementById('venda-obs').value = '';
   renderCarrinho();
   updateTotal();
 
@@ -1706,6 +1714,7 @@ function compartilharComprovante(venda) {
   texto += `Data: ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
   texto += `Pagamento: ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
   if (venda.encomenda) texto += `Status: 📦 Encomenda\n`;
+  if (venda.observacoes) texto += `Obs: ${venda.observacoes}\n`;
   texto += `----------------------------------\n`;
   
   venda.produtos.forEach(p => {
