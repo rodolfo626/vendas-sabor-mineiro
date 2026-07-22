@@ -1983,32 +1983,51 @@ function gerarRelatorioEncomendas() {
   const encomendas = vendas.filter(v => v.encomenda && !v.entregue);
   if (encomendas.length === 0) return toast('Nenhuma encomenda pendente encontrada');
   
-  let texto = `📦 RELATÓRIO DE ENCOMENDAS PENDENTES\n`;
-  texto += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
-  texto += `----------------------------------\n\n`;
+  let html = `<div style="font-family: monospace; white-space: pre-wrap;">`;
+  html += `<b style="font-size: 1.1rem;">📦 RELATÓRIO DE ENCOMENDAS PENDENTES</b><br>`;
+  html += `Data: ${new Date().toLocaleDateString('pt-BR')}<br>`;
+  html += `----------------------------------<br><br>`;
   
   let totalEnc = 0;
   
   encomendas.forEach(v => {
     const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
-    texto += `• ${v.clienteNome} (${dataFmt})\n`;
+    // Azul escuro para o nome do cliente
+    html += `<b style="color: #00008B; font-size: 1.05rem;">• ${v.clienteNome} (${dataFmt})</b><br>`;
+    
+    // Verde escuro para os itens do pedido
     v.produtos.forEach(p => {
-      texto += `  - ${p.quantidade}x ${p.produtoNome}\n`;
+      html += `<span style="color: #006400;">  - ${p.quantidade}x ${p.produtoNome}</span><br>`;
     });
-    if (v.observacoes) texto += `  📝 Obs: ${v.observacoes}\n`;
-    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')}\n\n`;
+    
+    // Vermelho para observações
+    if (v.observacoes) {
+      html += `<span style="color: #CC0000;">  📝 Obs: ${v.observacoes}</span><br>`;
+    }
+    
+    html += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')}<br>`;
+    // Linha tracejada separadora
+    html += `<span style="color: #ccc;">----------------------------------</span><br><br>`;
     totalEnc += v.total;
   });
   
-  texto += `----------------------------------\n`;
-  texto += `✅ TOTAL ENCOMENDAS: R$ ${totalEnc.toFixed(2).replace('.', ',')}\n`;
+  html += `<b>✅ TOTAL ENCOMENDAS: R$ ${totalEnc.toFixed(2).replace('.', ',')}</b>`;
+  html += `</div>`;
   
-  exibirRelatorio('Relatório de Encomendas', texto);
+  exibirRelatorioHTML('Relatório de Encomendas', html);
+}
+
+function exibirRelatorioHTML(titulo, html) {
+  document.getElementById('relatorio-titulo').textContent = '📄 ' + titulo;
+  const conteudo = document.getElementById('relatorio-conteudo');
+  conteudo.innerHTML = html;
+  openModal('modal-relatorio');
 }
 
 function exibirRelatorio(titulo, texto) {
   document.getElementById('relatorio-titulo').textContent = '📄 ' + titulo;
-  document.getElementById('relatorio-conteudo').textContent = texto;
+  const conteudo = document.getElementById('relatorio-conteudo');
+  conteudo.textContent = texto; // Usa textContent para relatórios normais (segurança)
   openModal('modal-relatorio');
 }
 
