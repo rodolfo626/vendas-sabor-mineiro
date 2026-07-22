@@ -1976,7 +1976,7 @@ function gerarRelatorioGeral() {
   texto += `💵 À VISTA: R$ ${totalAvista.toFixed(2).replace('.', ',')}\n`;
   texto += `📅 A PRAZO: R$ ${totalAprazo.toFixed(2).replace('.', ',')}\n`;
   
-  exibirRelatorio('Relatório Geral', texto);
+  exibirRelatorioHTML('Relatório Geral', `<pre style="white-space: pre-wrap; font-family: monospace;">${texto}</pre>`);
 }
 
 function gerarRelatorioEncomendas() {
