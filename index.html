@@ -699,7 +699,7 @@
 <div class="modal-overlay" id="modal-relatorio">
   <div class="modal">
     <h3 id="relatorio-titulo">📄 Relatório</h3>
-    <div id="relatorio-conteudo" style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; border: 1px solid var(--border); margin: 15px 0;"></div>
+    <div id="relatorio-conteudo" style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 0.9rem; border: 1px solid var(--border); margin: 15px 0; max-height: 400px; overflow-y: auto;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-relatorio')">Fechar</button>
       <button class="btn btn-secondary" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
@@ -1983,37 +1983,58 @@ function gerarRelatorioEncomendas() {
   const encomendas = vendas.filter(v => v.encomenda && !v.entregue);
   if (encomendas.length === 0) return toast('Nenhuma encomenda pendente encontrada');
   
-  let texto = `📦 RELATÓRIO DE ENCOMENDAS PENDENTES\n`;
-  texto += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
-  texto += `----------------------------------\n\n`;
+  let html = `<div style="line-height: 1.4;">`;
+  html += `<h3 style="margin-top:0; border-bottom: 2px solid #333; padding-bottom: 5px;">📦 RELATÓRIO DE ENCOMENDAS PENDENTES</h3>`;
+  html += `<p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>`;
+  html += `<div style="border-top: 1px dashed #999; margin: 10px 0;"></div>`;
   
   let totalEnc = 0;
   
-  encomendas.forEach(v => {
+  encomendas.forEach((v, index) => {
     const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
-    texto += `• ${v.clienteNome} (${dataFmt})\n`;
+    
+    // Nome do cliente em azul escuro
+    html += `<div style="color: #003366; font-weight: bold; font-size: 1.1rem; margin-top: 10px;">• ${v.clienteNome} (${dataFmt})</div>`;
+    
+    // Pedido em verde escuro
+    html += `<div style="color: #006400; margin-left: 15px; font-weight: 500;">`;
     v.produtos.forEach(p => {
-      texto += `  - ${p.quantidade}x ${p.produtoNome}\n`;
+      html += `<div>- ${p.quantidade}x ${p.produtoNome}</div>`;
     });
-    if (v.observacoes) texto += `  📝 Obs: ${v.observacoes}\n`;
-    texto += `  Total: R$ ${v.total.toFixed(2).replace('.', ',')}\n\n`;
+    html += `</div>`;
+    
+    // Informações adicionais em vermelho
+    if (v.observacoes) {
+      html += `<div style="color: #CC0000; margin-left: 15px; font-style: italic; font-weight: bold;">📝 Obs: ${v.observacoes}</div>`;
+    }
+    
+    html += `<div style="margin-left: 15px; font-weight: bold;">Total: R$ ${v.total.toFixed(2).replace('.', ',')}</div>`;
+    
+    // Linha traçada entre um cliente e outro
+    if (index < encomendas.length - 1) {
+      html += `<div style="border-top: 1px dashed #999; margin: 15px 0;"></div>`;
+    }
+    
     totalEnc += v.total;
   });
   
-  texto += `----------------------------------\n`;
-  texto += `✅ TOTAL ENCOMENDAS: R$ ${totalEnc.toFixed(2).replace('.', ',')}\n`;
+  html += `<div style="border-top: 2px solid #333; margin: 15px 0; padding-top: 10px; font-weight: bold; font-size: 1.1rem;">`;
+  html += `✅ TOTAL GERAL: R$ ${totalEnc.toFixed(2).replace('.', ',')}`;
+  html += `</div>`;
+  html += `</div>`;
   
-  exibirRelatorio('Relatório de Encomendas', texto);
+  exibirRelatorioHTML('Relatório de Encomendas', html);
 }
 
-function exibirRelatorio(titulo, texto) {
+function exibirRelatorioHTML(titulo, html) {
   document.getElementById('relatorio-titulo').textContent = '📄 ' + titulo;
-  document.getElementById('relatorio-conteudo').textContent = texto;
+  document.getElementById('relatorio-conteudo').innerHTML = html;
   openModal('modal-relatorio');
 }
 
 function copiarRelatorio() {
-  const texto = document.getElementById('relatorio-conteudo').textContent;
+  const conteudo = document.getElementById('relatorio-conteudo');
+  const texto = conteudo.innerText || conteudo.textContent;
   navigator.clipboard.writeText(texto).then(() => {
     toast('Relatório copiado para a área de transferência! 📋');
   });
@@ -2021,8 +2042,14 @@ function copiarRelatorio() {
 
 function imprimirRelatorio() {
   const titulo = document.getElementById('relatorio-titulo').textContent;
-  const conteudo = document.getElementById('relatorio-conteudo').textContent;
-  abrirJanelaImpressao(titulo, conteudo);
+  const conteudo = document.getElementById('relatorio-conteudo').innerHTML;
+  
+  const janela = window.open('', '', 'width=800,height=600');
+  janela.document.write('<html><head><title>' + titulo + '</title>');
+  janela.document.write('<style>body { font-family: sans-serif; padding: 20px; }</style></head><body>');
+  janela.document.write(conteudo);
+  janela.document.write('<script>setTimeout(() => { window.print(); window.close(); }, 500);</script></body></html>');
+  janela.document.close();
 }
 
 // ========== TOAST ==========
