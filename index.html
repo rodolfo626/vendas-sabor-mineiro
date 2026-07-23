@@ -535,9 +535,10 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioGeral()">📄 Relatório Geral</button>
-        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioEncomendas()">📦 Encomendas</button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioDiario()" style="font-size: 0.7rem; padding: 8px 4px;">📅 Diário</button>
+        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioGeral()" style="font-size: 0.7rem; padding: 8px 4px;">📄 Geral</button>
+        <button class="btn btn-outline btn-sm" onclick="gerarRelatorioEncomendas()" style="font-size: 0.7rem; padding: 8px 4px;">📦 Enc.</button>
       </div>
 
       <h2>📋 Histórico de Vendas</h2>
@@ -1968,6 +1969,51 @@ function excluirVenda(vendaId, clienteId) {
 }
 
 // ========== RELATÓRIOS ==========
+function gerarRelatorioDiario() {
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const vendasHoje = vendas.filter(v => new Date(v.data).toLocaleDateString('pt-BR') === hoje);
+  
+  if (vendasHoje.length === 0) return toast('Nenhuma venda realizada hoje');
+
+  let html = `<div style="font-family: monospace; white-space: pre-wrap;">`;
+  html += `<b style="font-size: 1.1rem;">📅 RELATÓRIO DIÁRIO - ${hoje}</b><br>`;
+  html += `----------------------------------<br><br>`;
+  
+  let totalDia = 0;
+  let totalAvista = 0;
+  let totalAprazo = 0;
+  let countVendas = 0;
+
+  vendasHoje.forEach(v => {
+    const horaFmt = new Date(v.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+    const corPagto = v.pagamento === 'avista' ? '#1E8449' : '#B9770E';
+    
+    html += `<b>• ${v.clienteNome}</b> (${horaFmt})<br>`;
+    
+    v.produtos.forEach(p => {
+      html += `  - ${p.quantidade}x ${p.produtoNome}<br>`;
+    });
+
+    html += `  Total: <b>R$ ${v.total.toFixed(2).replace('.', ',')}</b> <span style="color: ${corPagto}; font-size: 0.75rem;">(${v.pagamento === 'avista' ? 'À Vista' : 'A Prazo'})</span><br>`;
+    html += `<span style="color: #ccc;">----------------------------------</span><br><br>`;
+    
+    totalDia += v.total;
+    if (v.pagamento === 'avista') totalAvista += v.total;
+    else totalAprazo += v.total;
+    countVendas++;
+  });
+
+  html += `<div style="background: #f0f0f0; padding: 10px; border-radius: 5px;">`;
+  html += `💰 <b>TOTAL DO DIA: R$ ${totalDia.toFixed(2).replace('.', ',')}</b><br>`;
+  html += `💵 À Vista: R$ ${totalAvista.toFixed(2).replace('.', ',')}<br>`;
+  html += `📅 A Prazo: R$ ${totalAprazo.toFixed(2).replace('.', ',')}<br>`;
+  html += `🛒 Qtd Vendas: ${countVendas}`;
+  html += `</div>`;
+  html += `</div>`;
+
+  exibirRelatorioHTML('Relatório Diário', html);
+}
+
 function gerarRelatorioGeral() {
   if (vendas.length === 0) return toast('Nenhuma venda para gerar relatório');
   
