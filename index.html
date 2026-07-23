@@ -367,6 +367,7 @@
   .btn-wa { background: #25D366; color: white; }
   .btn-share { background: #3498DB; color: white; }
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -702,6 +703,7 @@
     <div id="relatorio-conteudo" style="background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; border: 1px solid var(--border); margin: 15px 0;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-relatorio')">Fechar</button>
+      <button class="btn btn-secondary" onclick="exportarRelatorioPDF()" style="background: #E74C3C; color: white;">📄 PDF</button>
       <button class="btn btn-secondary" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
       <button class="btn btn-primary" onclick="copiarRelatorio()">📋 Copiar Texto</button>
     </div>
@@ -2040,8 +2042,23 @@ function copiarRelatorio() {
 
 function imprimirRelatorio() {
   const titulo = document.getElementById('relatorio-titulo').textContent;
-  const conteudo = document.getElementById('relatorio-conteudo').textContent;
+  const conteudo = document.getElementById('relatorio-conteudo').innerHTML;
   abrirJanelaImpressao(titulo, conteudo);
+}
+
+function exportarRelatorioPDF() {
+  const elemento = document.getElementById('relatorio-conteudo');
+  const titulo = document.getElementById('relatorio-titulo').textContent.replace('📄 ', '');
+  
+  const opt = {
+    margin: 10,
+    filename: `${titulo}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(elemento).save();
 }
 
 // ========== TOAST ==========
