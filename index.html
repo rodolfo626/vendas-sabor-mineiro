@@ -487,9 +487,14 @@
 
       <div class="form-group" style="margin-top: 14px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-          <input type="checkbox" id="chk-encomenda" style="width: 18px; height: 18px;">
+          <input type="checkbox" id="chk-encomenda" style="width: 18px; height: 18px;" onchange="toggleDataEntrega(this.checked)">
           <span>📦 Marcar como Encomenda</span>
         </label>
+      </div>
+
+      <div id="group-data-entrega" class="form-group hidden" style="margin-top: 10px; background: #fffbe6; padding: 10px; border-radius: 8px; border: 1px solid #ffe58f;">
+        <label>📅 Data de Entrega Programada</label>
+        <input type="date" id="data-entrega" style="background: white;">
       </div>
     </div>
 
@@ -819,6 +824,19 @@ function copiarPixPagamento() {
 }
 
 // ========== TABS ==========
+function toggleDataEntrega(isShown) {
+  const group = document.getElementById('group-data-entrega');
+  if (isShown) {
+    group.classList.remove('hidden');
+    // Definir data padrão como amanhã
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+    document.getElementById('data-entrega').value = amanha.toISOString().split('T')[0];
+  } else {
+    group.classList.add('hidden');
+  }
+}
+
 function showTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
   const targetTab = document.getElementById('tab-' + tab);
@@ -1582,6 +1600,7 @@ function importarPedidoTexto() {
 function finalizarVenda() {
   let clienteId = document.getElementById('sel-cliente').value;
   const ehEncomenda = document.getElementById('chk-encomenda').checked;
+  const dataEntrega = document.getElementById('data-entrega').value;
 
   // No modo cliente, usar a identificação salva
   const params = new URLSearchParams(window.location.search);
@@ -1607,6 +1626,7 @@ function finalizarVenda() {
     produtos: [...carrinho],
     pagamento: pagamentoSelecionado,
     encomenda: ehEncomenda,
+    dataEntrega: ehEncomenda ? dataEntrega : null,
     total: totalGeral,
     observacoes: obs,
     data: new Date().toISOString()
@@ -1620,6 +1640,7 @@ function finalizarVenda() {
   document.getElementById('sel-cliente').value = '';
   document.getElementById('chk-encomenda').checked = false;
   document.getElementById('venda-obs').value = '';
+  document.getElementById('group-data-entrega').classList.add('hidden');
   renderCarrinho();
   updateTotal();
 
@@ -1755,7 +1776,7 @@ function renderHistorico() {
       : '<span class="h-badge badge-prazo">📅 A Prazo</span>';
     
     const badgeEncomenda = v.encomenda 
-      ? (v.entregue ? '<span class="h-badge" style="background:#E8F8F5; color:#1E8449;">✅ Entregue</span>' : '<span class="h-badge badge-encomenda">📦 Encomenda</span>')
+      ? (v.entregue ? '<span class="h-badge" style="background:#E8F8F5; color:#1E8449;">✅ Entregue</span>' : `<span class="h-badge badge-encomenda">📦 Encomenda ${v.dataEntrega ? '(Entrega: ' + new Date(v.dataEntrega + 'T12:00:00').toLocaleDateString('pt-BR') + ')' : ''}</span>`)
       : '';
     
     const btnEntregue = (v.encomenda && !v.entregue)
@@ -1994,8 +2015,10 @@ function gerarRelatorioEncomendas() {
   
   encomendas.forEach(v => {
     const dataFmt = new Date(v.data).toLocaleDateString('pt-BR');
+    const entregaFmt = v.dataEntrega ? new Date(v.dataEntrega + 'T12:00:00').toLocaleDateString('pt-BR') : 'Não definida';
     // Azul escuro para o nome do cliente
     html += `<b style="color: #00008B; font-size: 1.05rem;">• ${v.clienteNome} (${dataFmt})</b><br>`;
+    html += `<span style="font-size: 0.85rem; font-weight: bold;">📅 Entrega prevista: ${entregaFmt}</span><br>`;
     
     // Verde escuro para os itens do pedido
     v.produtos.forEach(p => {
