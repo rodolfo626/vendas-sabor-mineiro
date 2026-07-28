@@ -746,6 +746,25 @@ let pagamentoSelecionado = 'avista';
 function init() {
   const params = new URLSearchParams(window.location.search);
   
+  // Carregar produtos via link compartilhado (Modo Catálogo Dinâmico)
+  if (params.has('catalogo')) {
+    try {
+      const token = params.get('catalogo');
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(token))));
+      if (decoded && decoded.p) {
+        produtos = decoded.p.map((p, idx) => ({
+          id: 'ext-' + idx,
+          nome: p.n,
+          valor: p.v,
+          descricao: p.d,
+          imagem: p.i
+        }));
+      }
+    } catch (e) {
+      console.error("Erro ao carregar catálogo externo", e);
+    }
+  }
+
   // Modo Catálogo (Cliente)
   if (params.has('modo') && params.get('modo') === 'cliente') {
     document.body.classList.add('modo-cliente');
@@ -1170,9 +1189,18 @@ function addCarrinhoRapido(id) {
   toast(`1x ${produto.nome} adicionado! 🧀`);
 }
 
-function compartilharBomDiaWA() {
+function gerarLinkCompartilhavel() {
   const baseLink = window.location.origin + window.location.pathname;
-  const linkCliente = `${baseLink}?modo=cliente`;
+  // Codificar produtos para o link
+  const dados = {
+    p: produtos.map(p => ({ n: p.nome, v: p.valor, d: p.descricao || '', i: p.imagem || '' }))
+  };
+  const token = btoa(unescape(encodeURIComponent(JSON.stringify(dados))));
+  return `${baseLink}?modo=cliente&catalogo=${token}`;
+}
+
+function compartilharBomDiaWA() {
+  const linkCliente = gerarLinkCompartilhavel();
   
   let saudacao = "";
   const hora = new Date().getHours();
@@ -1203,8 +1231,7 @@ function compartilharListaCompletaWA() {
     texto += `*${p.nome}* - ${preco}%0A`;
   });
 
-  const baseLink = window.location.origin + window.location.pathname;
-  const linkCliente = `${baseLink}?modo=cliente`;
+  const linkCliente = gerarLinkCompartilhavel();
   
   texto += `%0A👉 *Peça pelo nosso catálogo online:*%0A${linkCliente}`;
 
@@ -1213,7 +1240,7 @@ function compartilharListaCompletaWA() {
 }
 
 function compartilharGeral(nome, desc, preco) {
-  const link = window.location.href;
+  const link = gerarLinkCompartilhavel();
   const texto = `🧀 *Sabor Mineiro*\n*${nome}*\n${desc}\n*Preço:* ${preco}\n\nVeja mais no nosso catálogo:\n${link}`;
   
   if (navigator.share) {
@@ -1242,8 +1269,7 @@ function compartilharAppCompleto() {
     texto += `• *${p.nome}* - ${preco}%0A`;
   });
 
-  const baseLink = window.location.origin + window.location.pathname;
-  const linkCliente = `${baseLink}?modo=cliente`;
+  const linkCliente = gerarLinkCompartilhavel();
   
   texto += `%0A📥 *Acesse nosso catálogo e faça seu pedido:*%0A${linkCliente}`;
 
