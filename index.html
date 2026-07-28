@@ -425,9 +425,14 @@
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h2 style="margin: 0;">📖 Catálogo de Produtos</h2>
-        <button class="btn btn-wa btn-sm" onclick="compartilharListaCompletaWA()" style="display: flex; align-items: center; gap: 5px; background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
-          <span style="font-size: 1rem;">💬</span> Compartilhar Lista
-        </button>
+        <div style="display: flex; gap: 5px;">
+          <button class="btn btn-primary btn-sm" onclick="copiarLinkCatalogo()" style="display: flex; align-items: center; gap: 5px; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+            <span>📋</span> Copiar Link
+          </button>
+          <button class="btn btn-wa btn-sm" onclick="compartilharListaCompletaWA()" style="display: flex; align-items: center; gap: 5px; background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+            <span style="font-size: 1rem;">💬</span> Compartilhar Lista
+          </button>
+        </div>
       </div>
       <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 15px;">Compartilhe seus produtos com os clientes no WhatsApp.</p>
       <div id="grid-catalogo" class="catalog-grid">
@@ -1197,6 +1202,17 @@ function gerarLinkCompartilhavel() {
   };
   const token = btoa(unescape(encodeURIComponent(JSON.stringify(dados))));
   return `${baseLink}?modo=cliente&catalogo=${token}`;
+}
+
+function copiarLinkCatalogo() {
+  if (produtos.length === 0) {
+    toast('Nenhum produto cadastrado para copiar.');
+    return;
+  }
+  const link = gerarLinkCompartilhavel();
+  navigator.clipboard.writeText(link).then(() => {
+    toast('Link do catálogo copiado! 📋');
+  });
 }
 
 function compartilharBomDiaWA() {
