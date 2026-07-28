@@ -1245,7 +1245,7 @@ function compartilharBomDiaWA() {
   else if (hora >= 12 && hora < 18) saudacao = "Boa tarde! 🌤️";
   else saudacao = "Boa noite! ✨";
 
-  let texto = `*${saudacao}* %0A%0APassando para desejar um dia maravilhoso e lembrar que temos queijos e laticínios fresquinhos para você! 🧀%0A%0A📦 *Confira nossa tabela de preços e faça seu pedido pelo link abaixo:*%0A${linkCliente}%0A%0AAguardamos seu pedido! 🧀🙏`;
+  let texto = `*${saudacao}* %0A%0APassando para desejar um dia maravilhoso e lembrar que temos quitandas fresquinhas para você! É só pedir e saborear! 🧀%0A%0A📦 *Confira nossa tabela de preços e faça seu pedido pelo link abaixo:*%0A${linkCliente}%0A%0AAguardamos seu pedido! 🧀🙏`;
 
   const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
   window.open(urlWa, '_blank');
