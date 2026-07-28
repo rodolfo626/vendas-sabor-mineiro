@@ -1837,10 +1837,23 @@ function compartilharComprovante(venda) {
   texto += `💰 TOTAL: R$ ${venda.total.toFixed(2).replace('.', ',')}\n\n`;
   texto += `Obrigado pela preferência! 🧀`;
 
-  // Número oficial do vendedor para receber pedidos/comprovantes
-  const telVendedor = '5535991477688';
-  const url = `https://api.whatsapp.com/send?phone=${telVendedor}&text=${encodeURIComponent(texto)}`;
-  window.open(url, '_blank');
+  // Lista de contatos da empresa
+  const contatos = [
+    { nome: 'Sabor Mineiro (Principal)', tel: '5535991477688' },
+    { nome: 'Rodolfo Oliveira', tel: '5535991477688' } 
+  ];
+
+  if (!contatos[1].tel) {
+    // Se ainda não tem o segundo número, envia pro primeiro direto
+    const url = `https://api.whatsapp.com/send?phone=${contatos[0].tel}&text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  } else {
+    // Se tem dois números, pergunta para qual enviar
+    const op = confirm(`Para qual WhatsApp deseja enviar o pedido?\n\nOK: ${contatos[0].nome}\nCancelar: ${contatos[1].nome}`);
+    const telFinal = op ? contatos[0].tel : contatos[1].tel;
+    const url = `https://api.whatsapp.com/send?phone=${telFinal}&text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  }
 }
 
 // ========== HISTÓRICO ==========
