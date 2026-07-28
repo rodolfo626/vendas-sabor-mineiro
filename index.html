@@ -413,6 +413,15 @@
 
   <!-- TAB: CATÁLOGO -->
   <div id="tab-catalogo" class="hidden">
+    <!-- Box: Mensagem de Bom Dia -->
+    <div class="card" style="background: linear-gradient(135deg, #FFF8F0 0%, #FFF1E0 100%); border-left: 5px solid var(--accent); margin-bottom: 20px;">
+      <h3 style="margin-top: 0; font-size: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 8px;">☀️ Mensagem de Bom Dia</h3>
+      <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 12px;">Gere uma mensagem personalizada com seu catálogo para enviar aos clientes.</p>
+      <button class="btn btn-wa" onclick="compartilharBomDiaWA()" style="width: 100%; background: #25D366; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span>☀️</span> Compartilhar Mensagem de Bom Dia
+      </button>
+    </div>
+
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h2 style="margin: 0;">📖 Catálogo de Produtos</h2>
@@ -1159,6 +1168,22 @@ function addCarrinhoRapido(id) {
   renderCarrinho();
   updateTotal();
   toast(`1x ${produto.nome} adicionado! 🧀`);
+}
+
+function compartilharBomDiaWA() {
+  const baseLink = window.location.origin + window.location.pathname;
+  const linkCliente = `${baseLink}?modo=cliente`;
+  
+  let saudacao = "";
+  const hora = new Date().getHours();
+  if (hora >= 5 && hora < 12) saudacao = "Bom dia! ☀️";
+  else if (hora >= 12 && hora < 18) saudacao = "Boa tarde! 🌤️";
+  else saudacao = "Boa noite! ✨";
+
+  let texto = `*${saudacao}* %0A%0APassando para desejar um dia maravilhoso e lembrar que temos queijos e laticínios fresquinhos para você! 🧀%0A%0A📦 *Confira nossa tabela de preços e faça seu pedido pelo link abaixo:*%0A${linkCliente}%0A%0AAguardamos seu pedido! 🧀🙏`;
+
+  const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
+  window.open(urlWa, '_blank');
 }
 
 function compartilharProdutoWA(texto) {
