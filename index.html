@@ -733,7 +733,28 @@
 <script>
 // ========== DATA STORE ==========
 function getData(key) {
-  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  try {
+    const data = localStorage.getItem(key);
+    if (!data && key === 'vsm_produtos') {
+      // Catálogo Padrão (Fallback)
+      return [
+        {"id": "1722210000000", "nome": "Bolachas amanteigada trad. 200g", "valor": 10, "descricao": "Bolachas sem recheio", "imagem": ""},
+        {"id": "1722210000001", "nome": "Bolachas amanteigada / goiabada 200g", "valor": 10, "descricao": "Bolachas com recheio de goiabada", "imagem": ""},
+        {"id": "1722210000002", "nome": "Bolachas amanteigadas / chocolate 200g", "valor": 10, "descricao": "Bolachas com recheio de chocolate", "imagem": ""},
+        {"id": "1722210000003", "nome": "Pão de queijo bandeija 500g", "valor": 15, "descricao": "Pão de queijo congelado", "imagem": ""},
+        {"id": "1722210000004", "nome": "Pão caseiro  PCT c/ 10 unds", "valor": 10, "descricao": "Pão caseiro massa salgada", "imagem": ""},
+        {"id": "1722210000005", "nome": "Rosca caseira de batata und", "valor": 12, "descricao": "Rosca de batata", "imagem": ""},
+        {"id": "1722210000006", "nome": "Pão caseiro recheado / frango c/ catupiry", "valor": 30, "descricao": "Pão recheado", "imagem": ""},
+        {"id": "1722210000007", "nome": "Pão caseiro recheado pernil", "valor": 30, "descricao": "Pão recheado", "imagem": ""},
+        {"id": "1722210000008", "nome": "Pão caseiro recheado calabresa c/ mussarela", "valor": 30, "descricao": "Pão recheado", "imagem": ""},
+        {"id": "1722210000009", "nome": "Pão caseiro recheado presunto mussarela e tomate", "valor": 30, "descricao": "Pão recheado", "imagem": ""},
+        {"id": "1722210000010", "nome": "Salgado assado", "valor": 7, "descricao": "", "imagem": ""},
+        {"id": "1722210000011", "nome": "Pão caseiro recheado sabores 1/2", "valor": 20, "descricao": "Pão recheado reduzido pela metade", "imagem": ""},
+        {"id": "1722210000012", "nome": "Pão recheado x-tudo", "valor": 30, "descricao": "", "imagem": ""}
+      ];
+    }
+    return JSON.parse(data) || [];
+  }
   catch { return []; }
 }
 function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
