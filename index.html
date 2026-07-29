@@ -1435,7 +1435,17 @@ function enviarPedidoPara(quem) {
   texto += `📋 *ITENS DO PEDIDO*\n`;
   
   vendaVirtual.produtos.forEach(p => {
-    texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    // Se for encomenda, separa o nome do produto da observação de data
+    let linhaProduto = p.produtoNome;
+    let obsLinha = "";
+    
+    if (p.produtoNome.includes("(Encomenda para")) {
+      const partes = p.produtoNome.split(" (Encomenda para ");
+      linhaProduto = partes[0];
+      obsLinha = `\n   📅 Encomenda para ${partes[1].replace(")", "")}`;
+    }
+
+    texto += `${p.quantidade}x ${linhaProduto} - R$ ${p.total.toFixed(2).replace('.', ',')}${obsLinha}\n`;
   });
   
   texto += `----------------------------------\n`;
@@ -1895,6 +1905,16 @@ function importarPedidoTexto() {
 
   // Adicionar produtos ao carrinho
   let adicionados = 0;
+  
+  // Limpa o texto de possíveis marcadores de ícones antes de processar produtos para não quebrar o regex
+  const textoLimpoProdutos = texto.replace(/📅 Encomenda para /g, "");
+
+  const produtosMatches = [...textoLimpoProdutos.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
+
+  if (produtosMatches.length === 0) {
+    return toast('Não foi possível identificar produtos no texto.');
+  }
+
   produtosMatches.forEach(m => {
     const qtd = parseInt(m[1]);
     const nomeProd = m[2].trim();
