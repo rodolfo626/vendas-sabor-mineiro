@@ -395,6 +395,8 @@
   .hidden { display: none !important; }
   .admin-only { display: block; }
   .modo-cliente .admin-only { display: none !important; }
+  .modo-cliente-only { display: none; }
+  .modo-cliente .modo-cliente-only { display: block !important; }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -437,11 +439,11 @@
   <!-- TABS -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div class="tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <button class="active" onclick="showTab('venda')" id="tab-btn-venda">🛒 Carrinho</button>
-      <button onclick="showTab('catalogo')">📖 Catálogo</button>
-      <button onclick="showTab('historico')">📋 Histórico</button>
-      <button onclick="showTab('clientes')">👥 Clientes</button>
-      <button onclick="showTab('produtos')">📦 Produtos</button>
+      <button onclick="showTab('catalogo')" id="tab-btn-catalogo">📖 Catálogo</button>
+      <button onclick="showTab('venda')" id="tab-btn-venda">🛒 Ver Carrinho</button>
+      <button onclick="showTab('historico')" class="admin-only">📋 Histórico</button>
+      <button onclick="showTab('clientes')" class="admin-only">👥 Clientes</button>
+      <button onclick="showTab('produtos')" class="admin-only">📦 Produtos</button>
     </div>
     <button class="btn btn-secondary btn-sm" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
   </div>
@@ -566,7 +568,9 @@
       <div class="value" id="total-valor">R$ 0,00</div>
     </div>
 
-    <button class="btn btn-success" onclick="finalizarVenda()" id="btn-finalizar-venda">✅ Finalizar Venda</button>
+    <button class="btn btn-success admin-only" onclick="finalizarVenda()" id="btn-finalizar-venda">✅ Finalizar Venda</button>
+    <button class="btn btn-success modo-cliente-only" onclick="compartilharComprovante()" style="display:none; width:100%; margin-top:10px;">💬 Compartilhar Pedido no WhatsApp</button>
+    <button class="btn btn-secondary modo-cliente-only" onclick="showTab('catalogo')" style="display:none; width:100%; margin-top:10px;">📖 Voltar para Catálogo</button>
   </div>
 
   <!-- TAB: HISTÓRICO -->
