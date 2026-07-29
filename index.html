@@ -1259,7 +1259,10 @@ function renderCatalogo() {
       : `<div class="catalog-img" style="cursor:pointer;" onclick="abrirEditarProduto('${p.id}')"><span>🧀</span><br><small style="font-size:10px;">Clique p/ add foto</small></div>`;
     
     // Lógica para Pães Recheados (Somente Encomenda)
-    const isPaoRecheado = p.nome.toLowerCase().includes('pão recheado') || p.nome.toLowerCase().includes('paes recheados');
+    const nomeBaixo = p.nome.toLowerCase();
+    const isPaoRecheado = nomeBaixo.includes('pão recheado') || 
+                         nomeBaixo.includes('paes recheados') || 
+                         nomeBaixo.includes('pão caseiro recheado');
     const btnAcao = isPaoRecheado 
       ? `<button class="btn btn-warning btn-sm" onclick="abrirModalEncomenda('${p.id}')" style="font-size: 0.8rem; width: 100%; font-weight: bold; color: #000;">
           📅 Encomendar (Quinta ou Sábado)
