@@ -1258,6 +1258,16 @@ function renderCatalogo() {
       ? `<img src="${p.imagem}" class="catalog-img" alt="${p.nome}" onerror="this.src=''; this.innerHTML='🧀';">`
       : `<div class="catalog-img" style="cursor:pointer;" onclick="abrirEditarProduto('${p.id}')"><span>🧀</span><br><small style="font-size:10px;">Clique p/ add foto</small></div>`;
     
+    // Lógica para Pães Recheados (Somente Encomenda)
+    const isPaoRecheado = p.nome.toLowerCase().includes('pão recheado') || p.nome.toLowerCase().includes('paes recheados');
+    const btnAcao = isPaoRecheado 
+      ? `<button class="btn btn-warning btn-sm" onclick="abrirModalEncomenda('${p.id}')" style="font-size: 0.8rem; width: 100%; font-weight: bold; color: #000;">
+          📅 Encomendar (Quinta ou Sábado)
+        </button>`
+      : `<button class="btn btn-success btn-sm" onclick="addCarrinhoRapido('${p.id}')" style="font-size: 0.8rem; width: 100%;">
+          🛒 Adicionar ao Pedido
+        </button>`;
+
     return `
       <div class="catalog-card">
         ${imagemHtml}
@@ -1267,9 +1277,7 @@ function renderCatalogo() {
           <div class="catalog-desc">${p.descricao || 'Delicioso produto mineiro.'}</div>
           
           <div class="catalog-actions" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-            <button class="btn btn-success btn-sm" onclick="addCarrinhoRapido('${p.id}')" style="font-size: 0.8rem; width: 100%;">
-              🛒 Adicionar ao Pedido
-            </button>
+            ${btnAcao}
             <div style="display: flex; gap: 4px;">
               <button class="btn-catalog btn-wa" onclick="compartilharProdutoWA('${textoCompartilhar}')" style="flex: 1;">
                 <span>💬 ZAP</span>
@@ -1283,6 +1291,68 @@ function renderCatalogo() {
       </div>
     `;
   }).join('');
+}
+
+let produtoParaEncomendaId = null;
+
+function abrirModalEncomenda(id) {
+  produtoParaEncomendaId = id;
+  const p = produtos.find(item => item.id === id);
+  if (!p) return;
+
+  document.getElementById('encomenda-nome-prod').textContent = p.nome;
+  
+  const selectData = document.getElementById('encomenda-data');
+  selectData.innerHTML = '<option value="">-- Escolha uma data --</option>';
+  
+  // Gerar próximas 4 datas (Quintas e Sábados)
+  const datas = [];
+  let dataAtual = new Date();
+  
+  for (let i = 0; i < 30; i++) { // Olhar 30 dias a frente
+    dataAtual.setDate(dataAtual.getDate() + 1);
+    const diaSemana = dataAtual.getDay(); // 0: Dom, 4: Qui, 6: Sab
+    
+    if (diaSemana === 4 || diaSemana === 6) {
+      const dataFmt = dataAtual.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+      const isoFmt = dataAtual.toISOString().split('T')[0];
+      datas.push({ label: dataFmt, value: isoFmt });
+      if (datas.length >= 6) break; // Mostra as próximas 6 datas
+    }
+  }
+
+  datas.forEach(d => {
+    selectData.innerHTML += `<option value="${d.value}">${d.label}</option>`;
+  });
+
+  openModal('modal-encomenda-cliente');
+}
+
+function confirmarEncomendaCliente() {
+  const dataSel = document.getElementById('encomenda-data').value;
+  if (!dataSel) return alert('Por favor, selecione uma data para entrega.');
+
+  const p = produtos.find(item => item.id === produtoParaEncomendaId);
+  if (!p) return;
+
+  const dataObj = new Date(dataSel + 'T12:00:00');
+  const dataFormatada = dataObj.toLocaleDateString('pt-BR');
+
+  const item = {
+    id: Date.now() + Math.random(),
+    produtoId: p.id,
+    produtoNome: p.nome + ` (Encomenda para ${dataFormatada})`,
+    quantidade: 1,
+    valorUnitario: p.valor,
+    total: p.valor,
+    entrega: dataFormatada
+  };
+
+  carrinho.push(item);
+  renderCarrinho();
+  updateTotal();
+  closeModal('modal-encomenda-cliente');
+  toast(`${p.nome} encomendado para ${dataFormatada}! 🧀📅`);
 }
 
 function addCarrinhoRapido(id) {
@@ -2459,6 +2529,37 @@ init();
     <button class="btn btn-success" onclick="salvarCadastroCliente()" style="width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; font-weight: bold;">
       ✅ Concluir Cadastro e Ver Catálogo
     </button>
+  </div>
+</div>
+
+<!-- Modal de Encomenda para Pães Recheados -->
+<div id="modal-encomenda-cliente" class="modal-overlay">
+  <div class="contact-modal-content" style="max-width: 400px; text-align: left;">
+    <h3 style="text-align: center; color: #e67e22; margin-bottom: 10px;">🍞 Encomenda Especial</h3>
+    <p style="text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 20px;">
+      Os <b>Pães Recheados</b> são produzidos sob encomenda e entregues apenas às <b>Quintas</b> e <b>Sábados</b>.
+    </p>
+    
+    <div class="form-group">
+      <label style="font-weight: bold;">Produto:</label>
+      <div id="encomenda-nome-prod" style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 15px; font-weight: bold; color: #333;"></div>
+    </div>
+
+    <div class="form-group">
+      <label style="font-weight: bold;">Escolha a data de entrega:</label>
+      <select id="encomenda-data" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;">
+        <option value="">-- Carregando datas... --</option>
+      </select>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 25px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-encomenda-cliente')" style="flex: 1; padding: 12px;">
+        Voltar
+      </button>
+      <button class="btn btn-warning" onclick="confirmarEncomendaCliente()" style="flex: 2; padding: 12px; font-weight: bold; color: #000;">
+        ✅ Confirmar Encomenda
+      </button>
+    </div>
   </div>
 </div>
 
