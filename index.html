@@ -397,6 +397,11 @@
   .modo-cliente .admin-only { display: none !important; }
   .modo-cliente-only { display: none; }
   .modo-cliente .modo-cliente-only { display: block !important; }
+  
+  /* Garante que botões com classe admin-only em flex containers sumam */
+  .modo-cliente button.admin-only, 
+  .modo-cliente div.admin-only, 
+  .modo-cliente a.admin-only { display: none !important; }
 
   /* Modal de Seleção de Contato */
   .contact-modal-content {
@@ -476,7 +481,7 @@
       <button onclick="showTab('clientes')" class="admin-only">👥 Clientes</button>
       <button onclick="showTab('produtos')" class="admin-only">📦 Produtos</button>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
+    <button class="btn btn-secondary btn-sm admin-only" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
   </div>
 
   <!-- TAB: CATÁLOGO -->
@@ -864,6 +869,7 @@ function init() {
   // Modo Catálogo (Cliente)
   if (params.has('modo') && params.get('modo') === 'cliente') {
     document.body.classList.add('modo-cliente');
+    
     showTab('catalogo');
     
     // Ajustar botão do carrinho e esconder administrativos
@@ -1351,7 +1357,7 @@ function confirmarEncomendaCliente() {
   const item = {
     id: Date.now() + Math.random(),
     produtoId: p.id,
-    produtoNome: p.nome + ` (Encomenda para ${dataFormatada})`,
+    produtoNome: p.nome,
     quantidade: 1,
     valorUnitario: p.valor,
     total: p.valor,
@@ -1435,7 +1441,17 @@ function enviarPedidoPara(quem) {
   texto += `📋 *ITENS DO PEDIDO*\n`;
   
   vendaVirtual.produtos.forEach(p => {
-    texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    // Se for encomenda, separa o nome do produto da observação de data
+    let linhaProduto = p.produtoNome;
+    let obsLinha = "";
+    
+    if (p.produtoNome.includes("(Encomenda para")) {
+      const partes = p.produtoNome.split(" (Encomenda para ");
+      linhaProduto = partes[0];
+      obsLinha = `\n   📅 Encomenda para ${partes[1].replace(")", "")}`;
+    }
+
+    texto += `${p.quantidade}x ${linhaProduto} - R$ ${p.total.toFixed(2).replace('.', ',')}${obsLinha}\n`;
   });
   
   texto += `----------------------------------\n`;
@@ -1895,7 +1911,17 @@ function importarPedidoTexto() {
 
   // Adicionar produtos ao carrinho
   let adicionados = 0;
-  produtosMatches.forEach(m => {
+  
+  // Limpa o texto de possíveis marcadores de ícones antes de processar produtos para não quebrar o regex
+  const textoLimpoProdutos = texto.replace(/📅 Encomenda para /g, "");
+
+  const matchesProdutosLimpos = [...textoLimpoProdutos.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
+
+  if (matchesProdutosLimpos.length === 0) {
+    return toast('Não foi possível identificar produtos no texto.');
+  }
+
+  matchesProdutosLimpos.forEach(m => {
     const qtd = parseInt(m[1]);
     const nomeProd = m[2].trim();
     
@@ -2006,6 +2032,7 @@ function visualizarComprovante(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
   texto += `----------------------------------\n`;
@@ -2029,6 +2056,7 @@ function imprimirVendaManual(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
   texto += `----------------------------------\n`;
@@ -2097,6 +2125,7 @@ function compartilharComprovante(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
   texto += `----------------------------------\n`;
