@@ -397,6 +397,11 @@
   .modo-cliente .admin-only { display: none !important; }
   .modo-cliente-only { display: none; }
   .modo-cliente .modo-cliente-only { display: block !important; }
+  
+  /* Garante que botões com classe admin-only em flex containers sumam */
+  .modo-cliente button.admin-only, 
+  .modo-cliente div.admin-only, 
+  .modo-cliente a.admin-only { display: none !important; }
 
   /* Modal de Seleção de Contato */
   .contact-modal-content {
@@ -476,7 +481,7 @@
       <button onclick="showTab('clientes')" class="admin-only">👥 Clientes</button>
       <button onclick="showTab('produtos')" class="admin-only">📦 Produtos</button>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
+    <button class="btn btn-secondary btn-sm admin-only" onclick="compartilharAppCompleto()" style="width: auto; padding: 8px 12px; border-radius: 50px;">🔗 Compartilhar App</button>
   </div>
 
   <!-- TAB: CATÁLOGO -->
@@ -864,6 +869,12 @@ function init() {
   // Modo Catálogo (Cliente)
   if (params.has('modo') && params.get('modo') === 'cliente') {
     document.body.classList.add('modo-cliente');
+    
+    // Forçar ocultação imediata de qualquer coisa admin
+    const style = document.createElement('style');
+    style.innerHTML = '.admin-only { display: none !important; }';
+    document.head.appendChild(style);
+
     showTab('catalogo');
     
     // Ajustar botão do carrinho e esconder administrativos
