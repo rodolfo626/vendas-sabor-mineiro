@@ -870,11 +870,6 @@ function init() {
   if (params.has('modo') && params.get('modo') === 'cliente') {
     document.body.classList.add('modo-cliente');
     
-    // Forçar ocultação imediata de qualquer coisa admin
-    const style = document.createElement('style');
-    style.innerHTML = '.admin-only { display: none !important; }';
-    document.head.appendChild(style);
-
     showTab('catalogo');
     
     // Ajustar botão do carrinho e esconder administrativos
