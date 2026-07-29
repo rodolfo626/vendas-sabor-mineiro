@@ -746,6 +746,13 @@
       </div>
       <input type="hidden" id="prod-imagem">
     </div>
+    <div class="form-group" style="margin-top: 10px;">
+      <label>Tipo de Venda</label>
+      <select id="prod-tipo-venda" class="input" style="margin-top: 5px;">
+        <option value="pronta">🛍️ Pronta Entrega</option>
+        <option value="encomenda">📅 Somente Encomenda</option>
+      </select>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
@@ -1037,6 +1044,7 @@ function abrirEditarProduto(id) {
   
   const imgData = p.imagem || '';
   document.getElementById('prod-imagem').value = imgData;
+  document.getElementById('prod-tipo-venda').value = p.tipoVenda || 'pronta';
   
   const previewContainer = document.getElementById('preview-container');
   const imgPreview = document.getElementById('img-preview');
@@ -1167,6 +1175,7 @@ function salvarProduto() {
   const desc = document.getElementById('prod-descricao').value.trim();
   const valor = parseFloat(document.getElementById('prod-valor').value);
   const imagem = document.getElementById('prod-imagem').value.trim();
+  const tipoVenda = document.getElementById('prod-tipo-venda').value;
 
   if (!nome) return toast('Informe o nome do produto');
   if (!valor || valor <= 0) return toast('Informe um valor válido');
@@ -1180,6 +1189,7 @@ function salvarProduto() {
         descricao: desc,
         valor,
         imagem: imagem || '',
+        tipoVenda: tipoVenda,
         disponivel: produtos[idx].disponivel !== undefined ? produtos[idx].disponivel : true
       };
       toast('Produto atualizado! ✅');
@@ -1191,6 +1201,7 @@ function salvarProduto() {
       descricao: desc, 
       valor,
       imagem: imagem || '',
+      tipoVenda: tipoVenda,
       disponivel: true,
       criadoEm: new Date().toISOString()
     });
@@ -1324,12 +1335,16 @@ function renderCatalogo() {
       ? `<img src="${p.imagem}" class="catalog-img" alt="${p.nome}" onerror="this.src=''; this.innerHTML='🧀';">`
       : `<div class="catalog-img" style="cursor:pointer;" onclick="abrirEditarProduto('${p.id}')"><span>🧀</span><br><small style="font-size:10px;">Clique p/ add foto</small></div>`;
     
-    // Lógica para Pães Recheados (Somente Encomenda)
+    // Lógica de Venda (Encomenda vs Pronta Entrega)
+    const isEncomendaManual = p.tipoVenda === 'encomenda';
     const nomeBaixo = p.nome.toLowerCase();
     const isPaoRecheado = nomeBaixo.includes('pão recheado') || 
                          nomeBaixo.includes('paes recheados') || 
                          nomeBaixo.includes('pão caseiro recheado');
-    const btnAcao = isPaoRecheado 
+    
+    const precisaEncomendar = isEncomendaManual || isPaoRecheado;
+    
+    const btnAcao = precisaEncomendar 
       ? `<button class="btn btn-warning btn-sm" onclick="abrirModalEncomenda('${p.id}')" style="font-size: 0.8rem; width: 100%; font-weight: bold; color: #000;">
           📅 Encomendar (Quinta ou Sábado)
         </button>`
