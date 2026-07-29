@@ -555,9 +555,9 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-venda-cliente">
       <h2>👤 Cliente</h2>
-      <div class="select-row">
+      <div class="select-row admin-only">
         <div class="form-group">
           <label>Selecione o cliente</label>
           <select id="sel-cliente">
@@ -930,14 +930,12 @@ function init() {
     const cardImportar = document.getElementById('card-importar');
     if (cardImportar) cardImportar.style.display = 'none';
 
-    // Esconder card de seleção de cliente na venda (privacidade)
-    const cardsVenda = document.querySelectorAll('#tab-venda .card');
-    cardsVenda.forEach(card => {
-      const h2 = card.querySelector('h2');
-      if (h2 && h2.textContent.includes('Cliente')) {
-        card.style.display = 'none';
-      }
-    });
+    // Esconder apenas o que for administrativo no card de cliente
+    const cardVendaCliente = document.getElementById('card-venda-cliente');
+    if (cardVendaCliente) {
+      const h2 = cardVendaCliente.querySelector('h2');
+      if (h2) h2.textContent = '📝 Opções do Pedido';
+    }
 
     // Verificar se o cliente já se identificou
     const clienteLogado = getData('vsm_cliente_identificado');
