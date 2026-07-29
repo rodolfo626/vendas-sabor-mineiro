@@ -1757,24 +1757,13 @@ function importarPedidoTexto() {
   const texto = document.getElementById('txt-importar').value.trim();
   if (!texto) return toast('Cole o texto do pedido primeiro');
 
-  // Regex para capturar dados
-  const nomeMatch = texto.match(/Cliente:\s*(.*)/i);
+  // Regex para capturar dados (Suporta o novo formato com ícones)
+  const nomeMatch = texto.match(/Nome:\s*(.*)/i) || texto.match(/Cliente:\s*(.*)/i);
   const telMatch = texto.match(/Telefone:\s*(.*)/i) || texto.match(/WhatsApp:\s*(.*)/i);
-  const endMatch = texto.match(/Endereço de Entrega:\s*([\s\S]*?)(?=\n\*|$)/i) || texto.match(/Endereço:\s*(.*)/i);
+  const endMatch = texto.match(/Endereço:\s*([\s\S]*?)(?=\n-|\n📋|\n\*|$)/i);
   const produtosMatches = [...texto.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
 
   if (produtosMatches.length === 0) {
-    // Tentar capturar formato de produto único
-    const prodUnicoMatch = texto.match(/\*(.*?)\*\n.*\n\*Preço:\*\s*R\$\s*([\d,.]+)/i);
-    if (prodUnicoMatch) {
-      const nomeP = prodUnicoMatch[1].trim();
-      const produto = produtos.find(p => p.nome.toLowerCase() === nomeP.toLowerCase());
-      if (produto) {
-        addCarrinhoRapido(produto.id);
-        document.getElementById('txt-importar').value = '';
-        return;
-      }
-    }
     return toast('Não foi possível identificar produtos no texto.');
   }
 
@@ -1784,6 +1773,7 @@ function importarPedidoTexto() {
     const telCli = telMatch ? telMatch[1].trim() : '';
     const endCli = endMatch ? endMatch[1].trim() : '';
     
+    // Busca por nome exato (ignorando maiúsculas)
     let cliente = clientes.find(c => c.nome.toLowerCase() === nomeCli.toLowerCase());
     
     if (!cliente) {
@@ -1802,13 +1792,15 @@ function importarPedidoTexto() {
       renderListaClientes();
       toast('Novo cliente "' + nomeCli + '" cadastrado automaticamente! ✨');
     } else {
-      // Atualizar endereço se o importado for mais completo
-      if (endCli && endCli.length > (cliente.endereco || '').length) {
+      // Se o cliente existe, verifica se o endereço mudou ou é novo
+      if (endCli && endCli !== cliente.endereco) {
         cliente.endereco = endCli;
         setData('vsm_clientes', clientes);
+        renderListaClientes();
         toast('Endereço de ' + nomeCli + ' atualizado.');
       }
     }
+    // Seleciona o cliente automaticamente no campo de venda
     document.getElementById('sel-cliente').value = cliente.id;
   }
 
@@ -1818,6 +1810,7 @@ function importarPedidoTexto() {
     const qtd = parseInt(m[1]);
     const nomeProd = m[2].trim();
     
+    // Busca o produto pelo nome no seu sistema
     const produto = produtos.find(p => p.nome.toLowerCase() === nomeProd.toLowerCase());
     if (produto) {
       carrinho.push({
@@ -1837,6 +1830,8 @@ function importarPedidoTexto() {
     updateTotal();
     document.getElementById('txt-importar').value = '';
     toast(`${adicionados} produtos adicionados ao carrinho! 🛒`);
+  } else {
+    toast('Produtos reconhecidos, mas não encontrados no seu cadastro de produtos.');
   }
 }
 
