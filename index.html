@@ -748,10 +748,22 @@
     </div>
     <div class="form-group" style="margin-top: 10px;">
       <label>Tipo de Venda</label>
-      <select id="prod-tipo-venda" class="input" style="margin-top: 5px;">
+      <select id="prod-tipo-venda" class="input" style="margin-top: 5px;" onchange="toggleDiasEncomenda()">
         <option value="pronta">🛍️ Pronta Entrega</option>
         <option value="encomenda">📅 Somente Encomenda</option>
       </select>
+    </div>
+    <div id="group-dias-encomenda" class="hidden" style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+      <label style="font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; display: block;">Dias disponíveis para Encomenda:</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="1"> Segunda</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="2"> Terça</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="3"> Quarta</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="4"> Quinta</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="5"> Sexta</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="6"> Sábado</label>
+        <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="chk-dia" value="0"> Domingo</label>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
@@ -1046,6 +1058,17 @@ function abrirEditarProduto(id) {
   document.getElementById('prod-imagem').value = imgData;
   document.getElementById('prod-tipo-venda').value = p.tipoVenda || 'pronta';
   
+  if (p.tipoVenda === 'encomenda') {
+    document.getElementById('group-dias-encomenda').classList.remove('hidden');
+    const dias = p.diasEncomenda || [];
+    document.querySelectorAll('.chk-dia').forEach(chk => {
+      chk.checked = dias.includes(parseInt(chk.value));
+    });
+  } else {
+    document.getElementById('group-dias-encomenda').classList.add('hidden');
+    document.querySelectorAll('.chk-dia').forEach(chk => chk.checked = false);
+  }
+  
   const previewContainer = document.getElementById('preview-container');
   const imgPreview = document.getElementById('img-preview');
   const btnRemover = document.getElementById('btn-remover-foto');
@@ -1176,6 +1199,13 @@ function salvarProduto() {
   const valor = parseFloat(document.getElementById('prod-valor').value);
   const imagem = document.getElementById('prod-imagem').value.trim();
   const tipoVenda = document.getElementById('prod-tipo-venda').value;
+  
+  const diasEncomenda = [];
+  if (tipoVenda === 'encomenda') {
+    document.querySelectorAll('.chk-dia:checked').forEach(chk => {
+      diasEncomenda.push(parseInt(chk.value));
+    });
+  }
 
   if (!nome) return toast('Informe o nome do produto');
   if (!valor || valor <= 0) return toast('Informe um valor válido');
@@ -1190,6 +1220,7 @@ function salvarProduto() {
         valor,
         imagem: imagem || '',
         tipoVenda: tipoVenda,
+        diasEncomenda: diasEncomenda,
         disponivel: produtos[idx].disponivel !== undefined ? produtos[idx].disponivel : true
       };
       toast('Produto atualizado! ✅');
@@ -1202,6 +1233,7 @@ function salvarProduto() {
       valor,
       imagem: imagem || '',
       tipoVenda: tipoVenda,
+      diasEncomenda: diasEncomenda,
       disponivel: true,
       criadoEm: new Date().toISOString()
     });
@@ -1215,16 +1247,31 @@ function salvarProduto() {
   renderListaProdutos();
 }
 
+function toggleDiasEncomenda() {
+  const tipo = document.getElementById('prod-tipo-venda').value;
+  const group = document.getElementById('group-dias-encomenda');
+  if (tipo === 'encomenda') {
+    group.classList.remove('hidden');
+  } else {
+    group.classList.add('hidden');
+    // Desmarcar todos ao esconder
+    document.querySelectorAll('.chk-dia').forEach(c => c.checked = false);
+  }
+}
+
 function resetModalProduto() {
   editingProdutoId = null;
   document.getElementById('prod-nome').value = '';
   document.getElementById('prod-descricao').value = '';
   document.getElementById('prod-valor').value = '';
   document.getElementById('prod-imagem').value = '';
+  document.getElementById('prod-tipo-venda').value = 'pronta';
   document.getElementById('input-foto').value = '';
   document.getElementById('img-preview').src = '';
   document.getElementById('preview-container').style.display = 'none';
   document.getElementById('btn-remover-foto').style.display = 'none';
+  document.getElementById('group-dias-encomenda').classList.add('hidden');
+  document.querySelectorAll('.chk-dia').forEach(c => c.checked = false);
   document.querySelector('#modal-produto h2').textContent = '📦 Novo Produto';
 }
 
@@ -1389,15 +1436,17 @@ function abrirModalEncomenda(id) {
   const selectData = document.getElementById('encomenda-data');
   selectData.innerHTML = '<option value="">-- Escolha uma data --</option>';
   
-  // Gerar próximas 4 datas (Quintas e Sábados)
+  // Gerar datas disponíveis baseadas na configuração do produto
+  const diasDisponiveis = p.diasEncomenda && p.diasEncomenda.length > 0 ? p.diasEncomenda : [4, 6]; // Default Qui/Sab
+  
   const datas = [];
   let dataAtual = new Date();
   
   for (let i = 0; i < 30; i++) { // Olhar 30 dias a frente
     dataAtual.setDate(dataAtual.getDate() + 1);
-    const diaSemana = dataAtual.getDay(); // 0: Dom, 4: Qui, 6: Sab
+    const diaSemana = dataAtual.getDay(); 
     
-    if (diaSemana === 4 || diaSemana === 6) {
+    if (diasDisponiveis.includes(diaSemana)) {
       const dataFmt = dataAtual.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
       const isoFmt = dataAtual.toISOString().split('T')[0];
       datas.push({ label: dataFmt, value: isoFmt });
