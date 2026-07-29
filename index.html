@@ -1915,13 +1915,13 @@ function importarPedidoTexto() {
   // Limpa o texto de possíveis marcadores de ícones antes de processar produtos para não quebrar o regex
   const textoLimpoProdutos = texto.replace(/📅 Encomenda para /g, "");
 
-  const produtosMatches = [...textoLimpoProdutos.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
+  const matchesProdutosLimpos = [...textoLimpoProdutos.matchAll(/(\d+)x\s*(.*?)\s*-\s*R\$\s*([\d,.]+)/g)];
 
-  if (produtosMatches.length === 0) {
+  if (matchesProdutosLimpos.length === 0) {
     return toast('Não foi possível identificar produtos no texto.');
   }
 
-  produtosMatches.forEach(m => {
+  matchesProdutosLimpos.forEach(m => {
     const qtd = parseInt(m[1]);
     const nomeProd = m[2].trim();
     
