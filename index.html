@@ -1606,6 +1606,7 @@ function copiarLinkCatalogo() {
 
 function compartilharBomDiaWA() {
   const linkCliente = gerarLinkCompartilhavel();
+  const urlImagem = "https://share.zapia.com/4w6hcca13ucckcrwytrv8a";
   
   let saudacao = "";
   const hora = new Date().getHours();
@@ -1615,7 +1616,8 @@ function compartilharBomDiaWA() {
 
   let texto = `*${saudacao}* %0A%0APassando para desejar um dia maravilhoso e lembrar que temos quitandas fresquinhas para você! É só pedir e saborear! 🧀%0A%0A📦 *Confira nossa tabela de preços e faça seu pedido pelo link abaixo:*%0A${linkCliente}%0A%0AAguardamos seu pedido! 🧀🙏`;
 
-  const urlWa = `https://api.whatsapp.com/send?text=${texto}`;
+  // Tentar enviar imagem + texto se possível (via API de compartilhamento de imagem)
+  const urlWa = `https://api.whatsapp.com/send?text=${urlImagem}%0A%0A${texto}`;
   window.open(urlWa, '_blank');
 }
 
