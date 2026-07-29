@@ -397,6 +397,36 @@
   .modo-cliente .admin-only { display: none !important; }
   .modo-cliente-only { display: none; }
   .modo-cliente .modo-cliente-only { display: block !important; }
+
+  /* Modal de Seleção de Contato */
+  .contact-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
+  .contact-btn {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.2s;
+  }
+  .contact-btn:active { transform: scale(0.98); }
+  .btn-rodolfo { background: #2C3E50; color: white; }
+  .btn-carla { background: #E67E22; color: white; }
+  .btn-cancel { background: #ecf0f1; color: #7f8c8d; margin-top: 15px; }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -1268,7 +1298,10 @@ function compartilharPedidoCliente() {
   if (carrinho.length === 0) {
     return alert('Seu carrinho está vazio!');
   }
+  openModal('modal-contatos');
+}
 
+function enviarPedidoPara(quem) {
   const identificacao = JSON.parse(localStorage.getItem('vsm_cliente_identificado') || '{}');
   const nomeCliente = identificacao.nome || 'Cliente';
   const enderecoCliente = identificacao.endereco || 'Não informado';
@@ -1282,7 +1315,33 @@ function compartilharPedidoCliente() {
     total: carrinho.reduce((sum, i) => sum + i.total, 0)
   };
 
-  compartilharComprovante(vendaVirtual);
+  // Pegar o texto formatado usando a lógica já existente
+  const contatos = {
+    'rodolfo': '5535991477688',
+    'carla': '5535999000557'
+  };
+
+  const telFinal = contatos[quem];
+  
+  // Aqui pegamos a lógica de texto da compartilharComprovante mas simplificada para o envio direto
+  let texto = `🧀 *NOVO PEDIDO - SABOR MINEIRO*\n`;
+  texto += `----------------------------------\n`;
+  texto += `*Cliente:* ${vendaVirtual.clienteNome}\n`;
+  texto += `*Endereço:* ${enderecoCliente}\n`;
+  texto += `*Data:* ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
+  texto += `----------------------------------\n`;
+  
+  vendaVirtual.produtos.forEach(p => {
+    texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+  });
+  
+  texto += `----------------------------------\n`;
+  texto += `💰 *TOTAL: R$ ${vendaVirtual.total.toFixed(2).replace('.', ',')}*\n\n`;
+  texto += `Por favor, confirme meu pedido! 🧀🙏`;
+
+  const url = `https://api.whatsapp.com/send?phone=${telFinal}&text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+  closeModal('modal-contatos');
 }
 
 function gerarLinkCompartilhavel() {
@@ -2350,6 +2409,22 @@ function toast(msg) {
 // ========== START ==========
 init();
 </script>
+
+<!-- Modal de Seleção de WhatsApp -->
+<div id="modal-contatos" class="modal-overlay">
+  <div class="contact-modal-content">
+    <h3 style="margin-bottom: 20px;">Para quem deseja enviar seu pedido?</h3>
+    <button class="contact-btn btn-rodolfo" onclick="enviarPedidoPara('rodolfo')">
+      👤 Enviar para Rodolfo Martins
+    </button>
+    <button class="contact-btn btn-carla" onclick="enviarPedidoPara('carla')">
+      👤 Enviar para Carla Bastos
+    </button>
+    <button class="contact-btn btn-cancel" onclick="closeModal('modal-contatos')">
+      Voltar / Cancelar
+    </button>
+  </div>
+</div>
 
 </body>
 </html>
