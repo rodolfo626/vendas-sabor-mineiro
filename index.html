@@ -573,6 +573,20 @@
       </div>
 
       <div class="form-group" style="margin-top: 14px;">
+        <label>Tipo de Entrega</label>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <label style="flex: 1; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+            <input type="radio" name="tipo-entrega" value="entrega" checked style="width: 18px; height: 18px;">
+            <span>🚚 Entrega</span>
+          </label>
+          <label style="flex: 1; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+            <input type="radio" name="tipo-entrega" value="retirada" style="width: 18px; height: 18px;">
+            <span>🏠 Retirada</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
           <input type="checkbox" id="chk-encomenda" style="width: 18px; height: 18px;" onchange="toggleDataEntrega(this.checked)">
           <span>📦 Marcar como Encomenda</span>
@@ -2117,6 +2131,7 @@ function finalizarVenda() {
 
   const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
   const obs = document.getElementById('venda-obs').value.trim();
+  const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked')?.value || 'entrega';
 
   const novaVenda = {
     id: Date.now().toString(),
@@ -2127,6 +2142,7 @@ function finalizarVenda() {
     pagamento: pagamentoSelecionado,
     encomenda: ehEncomenda,
     dataEntrega: ehEncomenda ? dataEntrega : null,
+    tipoEntrega: tipoEntrega,
     total: totalGeral,
     observacoes: obs,
     data: new Date().toISOString()
@@ -2251,6 +2267,7 @@ function compartilharComprovante(venda) {
     if (venda.clienteEndereco) texto += `*Endereço:* ${venda.clienteEndereco}\n`;
     texto += `*Data:* ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
     texto += `*Pagamento:* ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
+    texto += `*Tipo:* ${venda.tipoEntrega === 'retirada' ? '🏠 Retirada no Local' : '🚚 Entrega no Endereço'}\n`;
     if (venda.encomenda) {
       const dataEntregaFmt = venda.dataEntrega ? new Date(venda.dataEntrega + 'T12:00:00').toLocaleDateString('pt-BR') : 'A combinar';
       texto += `*Status:* 📦 Encomenda\n`;
@@ -2263,6 +2280,7 @@ function compartilharComprovante(venda) {
     if (venda.clienteEndereco) texto += `*Endereço:* ${venda.clienteEndereco}\n`;
     texto += `*Data:* ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
     texto += `*Pagamento:* ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
+    texto += `*Tipo:* ${venda.tipoEntrega === 'retirada' ? '🏠 Retirada' : '🚚 Entrega'}\n`;
     if (venda.encomenda) texto += `*Status:* 📦 Encomenda\n`;
   }
 
