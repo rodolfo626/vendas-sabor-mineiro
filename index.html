@@ -1950,6 +1950,7 @@ function finalizarVenda() {
     id: Date.now().toString(),
     clienteId: clienteId,
     clienteNome: cliente.nome,
+    clienteEndereco: cliente.endereco || '',
     produtos: [...carrinho],
     pagamento: pagamentoSelecionado,
     encomenda: ehEncomenda,
@@ -1995,6 +1996,9 @@ function visualizarComprovante(venda) {
   let texto = `🧾 COMPROVANTE DE VENDA - SABOR MINEIRO\n`;
   texto += `----------------------------------\n`;
   texto += `Cliente: ${venda.clienteNome}\n`;
+  if (venda.clienteEndereco) {
+    texto += `Endereço: ${venda.clienteEndereco}\n`;
+  }
   texto += `Data: ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
   texto += `Pagamento: ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
   if (venda.encomenda) texto += `Status: 📦 Encomenda${venda.entregue ? ' Entregue ✅' : ''}\n`;
@@ -2015,6 +2019,9 @@ function imprimirVendaManual(venda) {
   let texto = `🧾 COMPROVANTE DE VENDA - SABOR MINEIRO\n`;
   texto += `----------------------------------\n`;
   texto += `Cliente: ${venda.clienteNome}\n`;
+  if (venda.clienteEndereco) {
+    texto += `Endereço: ${venda.clienteEndereco}\n`;
+  }
   texto += `Data: ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
   texto += `Pagamento: ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
   if (venda.encomenda) texto += `Status: 📦 Encomenda${venda.entregue ? ' Entregue ✅' : ''}\n`;
@@ -2067,6 +2074,7 @@ function compartilharComprovante(venda) {
     texto = `🧀 *NOVO PEDIDO - SABOR MINEIRO*\n`;
     texto += `----------------------------------\n`;
     texto += `*Cliente:* ${venda.clienteNome}\n`;
+    if (venda.clienteEndereco) texto += `*Endereço:* ${venda.clienteEndereco}\n`;
     texto += `*Data:* ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
     texto += `*Pagamento:* ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
     if (venda.encomenda) {
@@ -2078,6 +2086,7 @@ function compartilharComprovante(venda) {
     texto = `🧾 *COMPROVANTE DE VENDA - SABOR MINEIRO*\n`;
     texto += `----------------------------------\n`;
     texto += `*Cliente:* ${venda.clienteNome}\n`;
+    if (venda.clienteEndereco) texto += `*Endereço:* ${venda.clienteEndereco}\n`;
     texto += `*Data:* ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
     texto += `*Pagamento:* ${venda.pagamento === 'avista' ? 'À Vista' : 'A Prazo'}\n`;
     if (venda.encomenda) texto += `*Status:* 📦 Encomenda\n`;
