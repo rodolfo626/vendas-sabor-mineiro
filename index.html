@@ -390,6 +390,11 @@
     from { transform: translateY(100px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
+
+  /* Utilitários */
+  .hidden { display: none !important; }
+  .admin-only { display: block; }
+  .modo-cliente .admin-only { display: none !important; }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -444,7 +449,7 @@
   <!-- TAB: CATÁLOGO -->
   <div id="tab-catalogo" class="hidden">
     <!-- Box: Mensagem de Bom Dia -->
-    <div class="card" style="background: linear-gradient(135deg, #FFF8F0 0%, #FFF1E0 100%); border-left: 5px solid var(--accent); margin-bottom: 20px;">
+    <div class="card admin-only" style="background: linear-gradient(135deg, #FFF8F0 0%, #FFF1E0 100%); border-left: 5px solid var(--accent); margin-bottom: 20px;">
       <h3 style="margin-top: 0; font-size: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 8px;">☀️ Mensagem de Bom Dia</h3>
       <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 12px;">Gere uma mensagem personalizada com seu catálogo para enviar aos clientes.</p>
       <button class="btn btn-wa" onclick="compartilharBomDiaWA()" style="width: 100%; background: #25D366; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px;">
@@ -455,7 +460,7 @@
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h2 style="margin: 0;">📖 Catálogo de Produtos</h2>
-        <div style="display: flex; gap: 5px;">
+        <div style="display: flex; gap: 5px;" class="admin-only">
           <button class="btn btn-primary btn-sm" onclick="copiarLinkCatalogo()" style="display: flex; align-items: center; gap: 5px; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
             <span>📋</span> Copiar Link
           </button>
@@ -473,13 +478,13 @@
 
   <!-- TAB: VENDA -->
   <div id="tab-venda">
-    <div class="card" id="card-importar" style="background: #f0f7ff; border: 1px dashed #007bff;">
+    <div class="card admin-only" id="card-importar" style="background: #f0f7ff; border: 1px dashed #007bff;">
       <h3 style="margin-top:0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">📥 Importar Pedido <small style="font-weight:normal; font-size:11px;">(WhatsApp)</small></h3>
       <textarea id="txt-importar" placeholder="Cole aqui o texto do comprovante recebido..." style="width:100%; height:60px; font-size:0.8rem; margin-bottom:8px; border-radius:8px; border:1px solid #ccc; padding:8px;"></textarea>
       <button class="btn btn-secondary btn-sm" onclick="importarPedidoTexto()" style="width: 100%;">📥 Processar e Adicionar ao Carrinho</button>
     </div>
 
-    <div class="card">
+    <div class="card admin-only">
       <h2>📦 Adicionar Produto</h2>
       <div class="select-row">
         <div class="form-group">
@@ -542,7 +547,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card admin-only">
       <h2>💳 Forma de Pagamento</h2>
       <div class="payment-options">
         <div class="payment-option selected" onclick="selectPayment('avista', this)">
