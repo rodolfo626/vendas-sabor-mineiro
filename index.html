@@ -1527,6 +1527,9 @@ function enviarPedidoPara(quem) {
   texto += `Por favor, confirme meu pedido! 🧀🙏`;
 
   const url = `https://api.whatsapp.com/send?phone=${telFinal}&text=${encodeURIComponent(texto)}`;
+  
+  alert('✅ Pedido enviado! Por favor, aguarde nosso retorno para concluir sua compra.');
+  
   window.open(url, '_blank');
   closeModal('modal-contatos');
 }
