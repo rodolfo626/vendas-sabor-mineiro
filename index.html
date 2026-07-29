@@ -2280,6 +2280,7 @@ function renderHistorico() {
             ${badgeEncomenda}
           </div>
           <div style="display: flex; gap: 4px;">
+            <button class="btn btn-secondary" onclick="visualizarVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">👁️ Ver</button>
             ${btnEntregue}
             <button class="btn btn-danger" onclick="excluirVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">🗑️ Excluir</button>
           </div>
@@ -2396,6 +2397,7 @@ function verHistoricoCliente(clienteId) {
               ${badge}
               ${badgeEncomenda}
               ${btnEntregue}
+              <button class="btn btn-secondary" onclick="visualizarVenda('${v.id}')" style="padding:4px 8px; font-size:0.7rem;">👁️</button>
               <button class="btn btn-danger" onclick="excluirVenda('${v.id}', '${clienteId}')" style="padding:4px 8px; font-size:0.7rem;">🗑️</button>
             </div>
             ${v.pagamento === 'aprazo' ? `<button class="btn btn-success btn-sm" onclick="receberVenda('${v.id}', '${clienteId}')" style="padding:4px 10px; font-size:0.7rem;">💰 Receber</button>` : ''}
@@ -2440,6 +2442,12 @@ function excluirVenda(vendaId, clienteId) {
   toast('Venda excluída com sucesso! 🗑️');
   if (clienteId) verHistoricoCliente(clienteId); // Atualiza o modal se estiver nele
   renderHistorico(); // Atualiza a aba de histórico geral
+}
+
+function visualizarVenda(vendaId) {
+  const venda = vendas.find(v => v.id === vendaId);
+  if (!venda) return toast('Venda não encontrada');
+  visualizarComprovante(venda);
 }
 
 // ========== RELATÓRIOS ==========
