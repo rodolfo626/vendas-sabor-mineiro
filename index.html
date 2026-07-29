@@ -402,7 +402,7 @@
   <!-- TABS -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div class="tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <button class="active" onclick="showTab('venda')">🛒 Venda</button>
+      <button class="active" onclick="showTab('venda')" id="tab-btn-venda">🛒 Carrinho</button>
       <button onclick="showTab('catalogo')">📖 Catálogo</button>
       <button onclick="showTab('historico')">📋 Histórico</button>
       <button onclick="showTab('clientes')">👥 Clientes</button>
@@ -531,7 +531,7 @@
       <div class="value" id="total-valor">R$ 0,00</div>
     </div>
 
-    <button class="btn btn-success" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+    <button class="btn btn-success" onclick="finalizarVenda()" id="btn-finalizar-venda">✅ Finalizar Venda</button>
   </div>
 
   <!-- TAB: HISTÓRICO -->
@@ -796,13 +796,23 @@ function init() {
     document.body.classList.add('modo-cliente');
     showTab('catalogo');
     
-    // Esconder botões administrativos
+    // Ajustar botão do carrinho e esconder administrativos
     document.querySelectorAll('.tabs button').forEach(btn => {
       const txt = btn.textContent.toLowerCase();
+      if (txt.includes('carrinho')) {
+        btn.textContent = '🛒 Carrinho';
+      }
       if (txt.includes('histórico') || txt.includes('clientes') || txt.includes('produtos')) {
         btn.style.display = 'none';
       }
     });
+
+    const btnFinalizar = document.getElementById('btn-finalizar-venda');
+    if (btnFinalizar) {
+      btnFinalizar.innerHTML = '💬 Compartilhar Pedido no WhatsApp';
+      btnFinalizar.style.background = '#25D366';
+      btnFinalizar.style.borderColor = '#128C7E';
+    }
     
     const btnShareTop = document.querySelector('button[onclick="compartilharAppCompleto()"]');
     if (btnShareTop) btnShareTop.style.display = 'none';
