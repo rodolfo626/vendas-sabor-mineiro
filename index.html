@@ -903,12 +903,7 @@ function init() {
     const clienteLogado = getData('vsm_cliente_identificado');
     if (!clienteLogado) {
       setTimeout(() => {
-        const modal = document.getElementById('modal-cliente');
-        document.getElementById('modal-cliente-titulo').textContent = '🧀 Seja bem-vindo! Identifique-se:';
-        // Esconder o botão cancelar para obrigar o cadastro
-        const btnCancel = modal.querySelector('.btn-outline');
-        if (btnCancel) btnCancel.style.display = 'none';
-        modal.classList.add('active');
+        openModal('modal-cadastro-cliente');
       }, 1000);
     }
   }
@@ -992,6 +987,21 @@ function showTab(tab) {
 // ========== MODALS ==========
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function salvarCadastroCliente() {
+  const nome = document.getElementById('reg-nome').value.trim();
+  const tel = document.getElementById('reg-tel').value.trim();
+  const end = document.getElementById('reg-end').value.trim();
+
+  if (!nome || !tel || !end) {
+    return alert('Por favor, preencha todos os campos para continuar.');
+  }
+
+  const cliente = { nome, tel, end };
+  setData('vsm_cliente_identificado', cliente);
+  closeModal('modal-cadastro-cliente');
+  toast('Bem-vindo, ' + nome.split(' ')[0] + '! 🧀');
+}
 
 // close modal clicking overlay
 document.querySelectorAll('.modal-overlay').forEach(m => {
@@ -1304,18 +1314,18 @@ function compartilharPedidoCliente() {
 function enviarPedidoPara(quem) {
   const identificacao = JSON.parse(localStorage.getItem('vsm_cliente_identificado') || '{}');
   const nomeCliente = identificacao.nome || 'Cliente';
-  const enderecoCliente = identificacao.endereco || 'Não informado';
+  const telCliente = identificacao.tel || '';
+  const enderecoCliente = identificacao.end || 'Não informado';
 
   const vendaVirtual = {
     clienteNome: nomeCliente,
     data: new Date().toISOString(),
     pagamento: 'avista',
-    observacoes: `Endereço de Entrega: ${enderecoCliente}`,
+    observacoes: `Endereço: ${enderecoCliente}`,
     produtos: carrinho,
     total: carrinho.reduce((sum, i) => sum + i.total, 0)
   };
 
-  // Pegar o texto formatado usando a lógica já existente
   const contatos = {
     'rodolfo': '5535991477688',
     'carla': '5535999000557'
@@ -1323,13 +1333,17 @@ function enviarPedidoPara(quem) {
 
   const telFinal = contatos[quem];
   
-  // Aqui pegamos a lógica de texto da compartilharComprovante mas simplificada para o envio direto
+  // Mascarar telefone (exibe apenas os últimos dígitos)
+  const telMascarado = telCliente ? '****' + telCliente.slice(-4) : 'Não informado';
+
   let texto = `🧀 *NOVO PEDIDO - SABOR MINEIRO*\n`;
   texto += `----------------------------------\n`;
-  texto += `*Cliente:* ${vendaVirtual.clienteNome}\n`;
+  texto += `👤 *DADOS DO CLIENTE*\n`;
+  texto += `*Nome:* ${nomeCliente}\n`;
+  texto += `*Telefone:* ${telMascarado}\n`;
   texto += `*Endereço:* ${enderecoCliente}\n`;
-  texto += `*Data:* ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n`;
   texto += `----------------------------------\n`;
+  texto += `📋 *ITENS DO PEDIDO*\n`;
   
   vendaVirtual.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
@@ -2422,6 +2436,33 @@ init();
     </button>
     <button class="contact-btn btn-cancel" onclick="closeModal('modal-contatos')">
       Voltar / Cancelar
+    </button>
+  </div>
+</div>
+
+<!-- Modal de Cadastro Inicial do Cliente -->
+<div id="modal-cadastro-cliente" class="modal-overlay">
+  <div class="contact-modal-content" style="max-width: 450px; text-align: left;">
+    <h2 style="text-align: center; color: var(--primary-dark); margin-bottom: 10px;">🧀 Cadastro Sabor Mineiro</h2>
+    <p style="text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 20px;">Olá! Identifique-se para facilitar a entrega do seu pedido.</p>
+    
+    <div class="form-group">
+      <label>Nome Completo</label>
+      <input type="text" id="reg-nome" placeholder="Seu nome completo" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
+    
+    <div class="form-group" style="margin-top: 15px;">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" id="reg-tel" placeholder="(00) 00000-0000" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
+    
+    <div class="form-group" style="margin-top: 15px;">
+      <label>Endereço de Entrega</label>
+      <textarea id="reg-end" placeholder="Rua, número, bairro e cidade" style="width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid #ccc;"></textarea>
+    </div>
+    
+    <button class="btn btn-success" onclick="salvarCadastroCliente()" style="width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; font-weight: bold;">
+      ✅ Concluir Cadastro e Ver Catálogo
     </button>
   </div>
 </div>
