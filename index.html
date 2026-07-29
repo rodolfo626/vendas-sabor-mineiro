@@ -366,6 +366,30 @@
   }
   .btn-wa { background: #25D366; color: white; }
   .btn-share { background: #3498DB; color: white; }
+
+  /* Carrinho Flutuante */
+  #floating-cart {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #27AE60;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    cursor: pointer;
+    display: none; /* Inicia escondido */
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    border: 2px solid white;
+    animation: slideIn 0.3s ease-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -375,6 +399,12 @@
   <h1>🧀 Vendas <span>Sabor Mineiro</span></h1>
   <p>Sistema de vendas</p>
 </header>
+
+<!-- Carrinho Flutuante para Clientes -->
+<div id="floating-cart" onclick="showTab('venda')">
+  <span>🛒 Ver Carrinho</span>
+  <span id="floating-cart-total" style="background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 10px;">R$ 0,00</span>
+</div>
 
 <div id="view-pagamento">
   <div class="pay-card">
@@ -1606,6 +1636,17 @@ function renderCarrinho() {
 function updateTotal() {
   const total = carrinho.reduce((sum, item) => sum + item.total, 0);
   document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+  
+  // Atualizar carrinho flutuante se estiver no modo cliente
+  const floatCart = document.getElementById('floating-cart');
+  if (document.body.classList.contains('modo-cliente') && carrinho.length > 0) {
+    if (floatCart) {
+      floatCart.style.display = 'flex';
+      document.getElementById('floating-cart-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+  } else {
+    if (floatCart) floatCart.style.display = 'none';
+  }
 }
 
 // ========== FINALIZAR VENDA ==========
