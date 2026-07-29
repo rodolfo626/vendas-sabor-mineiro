@@ -569,7 +569,7 @@
     </div>
 
     <button class="btn btn-success admin-only" onclick="finalizarVenda()" id="btn-finalizar-venda">✅ Finalizar Venda</button>
-    <button class="btn btn-success modo-cliente-only" onclick="compartilharComprovante()" style="display:none; width:100%; margin-top:10px;">💬 Compartilhar Pedido no WhatsApp</button>
+    <button class="btn btn-success modo-cliente-only" onclick="compartilharPedidoCliente()" style="display:none; width:100%; margin-top:10px;">💬 Compartilhar Pedido no WhatsApp</button>
     <button class="btn btn-secondary modo-cliente-only" onclick="showTab('catalogo')" style="display:none; width:100%; margin-top:10px;">📖 Voltar para Catálogo</button>
   </div>
 
@@ -1262,6 +1262,27 @@ function addCarrinhoRapido(id) {
   renderCarrinho();
   updateTotal();
   toast(`1x ${produto.nome} adicionado! 🧀`);
+}
+
+function compartilharPedidoCliente() {
+  if (carrinho.length === 0) {
+    return alert('Seu carrinho está vazio!');
+  }
+
+  const identificacao = JSON.parse(localStorage.getItem('vsm_cliente_identificado') || '{}');
+  const nomeCliente = identificacao.nome || 'Cliente';
+  const enderecoCliente = identificacao.endereco || 'Não informado';
+
+  const vendaVirtual = {
+    clienteNome: nomeCliente,
+    data: new Date().toISOString(),
+    pagamento: 'avista',
+    observacoes: `Endereço de Entrega: ${enderecoCliente}`,
+    produtos: carrinho,
+    total: carrinho.reduce((sum, i) => sum + i.total, 0)
+  };
+
+  compartilharComprovante(vendaVirtual);
 }
 
 function gerarLinkCompartilhavel() {
