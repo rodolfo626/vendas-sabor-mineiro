@@ -927,12 +927,20 @@ function init() {
 
     // Verificar se o cliente já se identificou
     const clienteLogado = getData('vsm_cliente_identificado');
+    const btnCad = document.getElementById('btn-cadastro-manual');
     if (!clienteLogado) {
-      const btnCad = document.getElementById('btn-cadastro-manual');
-      if (btnCad) btnCad.style.display = 'block';
+      if (btnCad) {
+        btnCad.style.display = 'block';
+        btnCad.innerHTML = '👤 Cadastre-se';
+      }
       setTimeout(() => {
         openModal('modal-cadastro-cliente');
       }, 1000);
+    } else {
+      if (btnCad) {
+        btnCad.style.display = 'block';
+        btnCad.innerHTML = '👤 Perfil';
+      }
     }
   }
 
@@ -1013,7 +1021,20 @@ function showTab(tab) {
 }
 
 // ========== MODALS ==========
-function openModal(id) { document.getElementById(id).classList.add('show'); }
+function openModal(id) { 
+  if (id === 'modal-cadastro-cliente') {
+    const ident = getData('vsm_cliente_identificado');
+    if (ident) {
+      document.getElementById('reg-nome').value = ident.nome || '';
+      document.getElementById('reg-tel').value = ident.tel || '';
+      document.getElementById('reg-end').value = ident.end || '';
+      document.querySelector('#modal-cadastro-cliente h2').textContent = '👤 Seu Perfil';
+    } else {
+      document.querySelector('#modal-cadastro-cliente h2').textContent = '🧀 Cadastro Sabor Mineiro';
+    }
+  }
+  document.getElementById(id).classList.add('show'); 
+}
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
 function salvarCadastroCliente() {
@@ -1030,9 +1051,12 @@ function salvarCadastroCliente() {
   closeModal('modal-cadastro-cliente');
   
   const btnCad = document.getElementById('btn-cadastro-manual');
-  if (btnCad) btnCad.style.display = 'none';
+  if (btnCad) {
+    btnCad.style.display = 'block';
+    btnCad.innerHTML = '👤 Perfil';
+  }
 
-  toast('Bem-vindo, ' + nome.split(' ')[0] + '! 🧀');
+  toast('Cadastro salvo com sucesso! 🧀');
 }
 
 // close modal clicking overlay
