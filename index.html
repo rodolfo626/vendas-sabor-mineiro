@@ -1179,7 +1179,8 @@ function salvarProduto() {
         nome,
         descricao: desc,
         valor,
-        imagem: imagem || ''
+        imagem: imagem || '',
+        disponivel: produtos[idx].disponivel !== undefined ? produtos[idx].disponivel : true
       };
       toast('Produto atualizado! ✅');
     }
@@ -1190,6 +1191,7 @@ function salvarProduto() {
       descricao: desc, 
       valor,
       imagem: imagem || '',
+      disponivel: true,
       criadoEm: new Date().toISOString()
     });
     toast('Produto cadastrado! ✅');
@@ -1224,6 +1226,52 @@ function excluirProduto(id) {
   toast('Produto excluído');
 }
 
+function toggleStatusProduto(id) {
+  const idx = produtos.findIndex(p => p.id === id);
+  if (idx !== -1) {
+    produtos[idx].disponivel = (produtos[idx].disponivel === false) ? true : false;
+    setData('vsm_produtos', produtos);
+    renderListaProdutos();
+    toast(`Produto ${produtos[idx].disponivel ? 'disponível' : 'bloqueado'}!`);
+    
+    // Auto-save no GitHub para atualizar o catálogo dos clientes
+    if (getData('vsm_token_github')) {
+      sincronizarGitHubSilent();
+    }
+  }
+}
+
+function sincronizarGitHubSilent() {
+  const token = getData('vsm_token_github');
+  if (!token) return;
+
+  const url = `https://api.github.com/repos/rodolfo626/vendas-sabor-mineiro/contents/index.html`;
+  
+  fetch(url, { headers: { Authorization: `token ${token}` } })
+    .then(r => r.json())
+    .then(data => {
+      const content = b64EncodeUnicode(document.documentElement.outerHTML);
+      const body = JSON.stringify({
+        message: 'Atualização automática de disponibilidade de produto',
+        content: content,
+        sha: data.sha
+      });
+
+      return fetch(url, {
+        method: 'PUT',
+        headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+        body: body
+      });
+    })
+    .catch(err => console.error("Erro na sincronização automática", err));
+}
+
+function b64EncodeUnicode(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+    return String.fromCharCode('0x' + p1);
+  }));
+}
+
 function renderProdutosSelect() {
   const sel = document.getElementById('sel-produto');
   sel.innerHTML = '<option value="">-- Escolha um produto --</option>';
@@ -1245,6 +1293,9 @@ function renderListaProdutos() {
         <div class="li-sub">${p.descricao || 'Sem descrição'} — R$ ${p.valor.toFixed(2).replace('.', ',')}</div>
       </div>
       <div class="li-actions">
+        <button class="btn ${p.disponivel !== false ? 'btn-success' : 'btn-secondary'} btn-sm" onclick="toggleStatusProduto('${p.id}')" title="${p.disponivel !== false ? 'Bloquear Produto' : 'Desbloquear Produto'}">
+          ${p.disponivel !== false ? '🟢' : '🔴'}
+        </button>
         <button class="btn btn-secondary btn-sm" onclick="abrirEditarProduto('${p.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="excluirProduto('${p.id}')">🗑️</button>
       </div>
@@ -1258,12 +1309,14 @@ function renderCatalogo() {
   const container = document.getElementById('grid-catalogo');
   if (!container) return;
 
-  if (!produtos.length) {
-    container.innerHTML = '<div class="empty"><p>Nenhum produto para exibir no catálogo</p></div>';
+  const produtosFiltrados = produtos.filter(p => p.disponivel !== false);
+
+  if (!produtosFiltrados.length) {
+    container.innerHTML = '<div class="empty"><p>Nenhum produto disponível no momento</p></div>';
     return;
   }
 
-  container.innerHTML = produtos.map(p => {
+  container.innerHTML = produtosFiltrados.map(p => {
     const precoFormatado = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const textoCompartilhar = `🧀 *Sabor Mineiro*%0A*${p.nome}*%0A${p.descricao || ''}%0A*Preço:* ${precoFormatado}`;
     
