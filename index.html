@@ -599,6 +599,15 @@
       </div>
     </div>
 
+    <div class="card admin-only" style="background: #fffaf0; border: 1px dashed var(--accent);">
+      <h2>🏷️ Desconto da Venda</h2>
+      <div class="form-group">
+        <label for="venda-desconto">Desconto em porcentagem (%)</label>
+        <input type="number" id="venda-desconto" min="0" max="100" step="0.01" value="0" placeholder="Ex: 10" oninput="updateTotal()" style="width: 100%;">
+        <small style="display:block; margin-top:5px; color:#777;">Use somente quando houver negociação para compra em maior quantidade.</small>
+      </div>
+    </div>
+
     <div class="card admin-only">
       <h2>💳 Forma de Pagamento</h2>
       <div class="payment-options">
@@ -615,6 +624,7 @@
 
     <div class="total-panel">
       <div class="label">Valor Total</div>
+      <div class="admin-only" id="total-desconto-info" style="font-size: 0.8rem; margin-bottom: 4px;"></div>
       <div class="value" id="total-valor">R$ 0,00</div>
     </div>
 
@@ -2000,15 +2010,29 @@ function renderCarrinho() {
 
 // ========== TOTAL ==========
 function updateTotal() {
-  const total = carrinho.reduce((sum, item) => sum + item.total, 0);
+  const subtotal = carrinho.reduce((sum, item) => sum + item.total, 0);
+  const ehModoCliente = new URLSearchParams(window.location.search).get('modo') === 'cliente';
+  const campoDesconto = document.getElementById('venda-desconto');
+  let percentual = ehModoCliente ? 0 : parseFloat(campoDesconto?.value || 0);
+  if (!Number.isFinite(percentual)) percentual = 0;
+  percentual = Math.max(0, Math.min(100, percentual));
+  const valorDesconto = subtotal * percentual / 100;
+  const total = subtotal - valorDesconto;
+
   document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+  const infoDesconto = document.getElementById('total-desconto-info');
+  if (infoDesconto) {
+    infoDesconto.innerHTML = percentual > 0
+      ? `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')} · Desconto: ${percentual.toFixed(2).replace('.', ',')}% (- R$ ${valorDesconto.toFixed(2).replace('.', ',')})`
+      : '';
+  }
   
   // Atualizar carrinho flutuante se estiver no modo cliente
   const floatCart = document.getElementById('floating-cart');
   if (document.body.classList.contains('modo-cliente') && carrinho.length > 0) {
     if (floatCart) {
       floatCart.style.display = 'flex';
-      document.getElementById('floating-cart-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+      document.getElementById('floating-cart-total').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
     }
   } else {
     if (floatCart) floatCart.style.display = 'none';
@@ -2127,9 +2151,16 @@ function finalizarVenda() {
   const cliente = clientes.find(c => c.id === clienteId);
   if (!cliente) return toast('Cliente não encontrado');
 
-  const totalGeral = carrinho.reduce((sum, item) => sum + item.total, 0);
+  const subtotal = carrinho.reduce((sum, item) => sum + item.total, 0);
   const obs = document.getElementById('venda-obs').value.trim();
   const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked')?.value || 'entrega';
+  const campoDesconto = document.getElementById('venda-desconto');
+  let descontoPercentual = params.get('modo') === 'cliente' ? 0 : parseFloat(campoDesconto?.value || 0);
+  if (!Number.isFinite(descontoPercentual) || descontoPercentual < 0 || descontoPercentual > 100) {
+    return toast('Informe um desconto entre 0% e 100%');
+  }
+  const descontoValor = subtotal * descontoPercentual / 100;
+  const totalGeral = subtotal - descontoValor;
 
   const novaVenda = {
     id: Date.now().toString(),
@@ -2141,6 +2172,9 @@ function finalizarVenda() {
     encomenda: ehEncomenda,
     dataEntrega: ehEncomenda ? dataEntrega : null,
     tipoEntrega: tipoEntrega,
+    subtotal: subtotal,
+    descontoPercentual: descontoPercentual,
+    descontoValor: descontoValor,
     total: totalGeral,
     observacoes: obs,
     data: new Date().toISOString()
@@ -2154,6 +2188,8 @@ function finalizarVenda() {
   document.getElementById('sel-cliente').value = '';
   document.getElementById('chk-encomenda').checked = false;
   document.getElementById('venda-obs').value = '';
+  const campoDescontoReset = document.getElementById('venda-desconto');
+  if (campoDescontoReset) campoDescontoReset.value = '0';
   document.getElementById('group-data-entrega').classList.add('hidden');
   renderCarrinho();
   updateTotal();
@@ -2196,6 +2232,10 @@ function visualizarComprovante(venda) {
   });
   
   texto += `----------------------------------\n`;
+  if ((venda.descontoValor || 0) > 0) {
+    texto += `Subtotal: R$ ${(venda.subtotal || venda.total + venda.descontoValor).toFixed(2).replace('.', ',')}\n`;
+    texto += `Desconto: ${venda.descontoPercentual.toFixed(2).replace('.', ',')}% (- R$ ${venda.descontoValor.toFixed(2).replace('.', ',')})\n`;
+  }
   texto += `💰 TOTAL: R$ ${venda.total.toFixed(2).replace('.', ',')}\n\n`;
   texto += `Obrigado pela preferência! 🧀`;
 
@@ -2220,6 +2260,10 @@ function imprimirVendaManual(venda) {
   });
   
   texto += `----------------------------------\n`;
+  if ((venda.descontoValor || 0) > 0) {
+    texto += `Subtotal: R$ ${(venda.subtotal || venda.total + venda.descontoValor).toFixed(2).replace('.', ',')}\n`;
+    texto += `Desconto: ${venda.descontoPercentual.toFixed(2).replace('.', ',')}% (- R$ ${venda.descontoValor.toFixed(2).replace('.', ',')})\n`;
+  }
   texto += `💰 TOTAL: R$ ${venda.total.toFixed(2).replace('.', ',')}\n\n`;
   texto += `Obrigado pela preferência! 🧀`;
 
@@ -2365,6 +2409,7 @@ function renderHistorico() {
           ${listaProdutosHtml}
         </div>
         <div class="h-details" style="margin-top:4px;">📅 ${dataStr}</div>
+        ${v.descontoValor > 0 ? `<div class="h-details" style="margin-top:4px; color:#b05a00;">🏷️ Desconto: ${Number(v.descontoPercentual).toFixed(2).replace('.', ',')}% (- R$ ${Number(v.descontoValor).toFixed(2).replace('.', ',')})</div>` : ''}
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
           <div style="display: flex; gap: 4px; flex-wrap: wrap;">
             ${badge}
@@ -2567,6 +2612,9 @@ function gerarRelatorioDiario() {
       html += `  - ${p.quantidade}x ${p.produtoNome}<br>`;
     });
 
+    if (v.descontoValor > 0) {
+      html += `  Desconto: ${Number(v.descontoPercentual).toFixed(2).replace('.', ',')}% (- R$ ${Number(v.descontoValor).toFixed(2).replace('.', ',')})<br>`;
+    }
     html += `  Total: <b>R$ ${v.total.toFixed(2).replace('.', ',')}</b> <span style="color: ${corPagto}; font-size: 0.75rem;">(${v.pagamento === 'avista' ? 'À Vista' : 'A Prazo'})</span><br>`;
     html += `<span style="color: #ccc;">----------------------------------</span><br><br>`;
     
