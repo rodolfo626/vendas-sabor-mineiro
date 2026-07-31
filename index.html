@@ -2031,6 +2031,13 @@ function atualizarDisponibilidadeDesconto() {
   return elegivel;
 }
 
+function calcularDescontoPorProduto(percentual) {
+  return carrinho.reduce((total, item) => {
+    const elegivel = Number(item.quantidade) >= 10;
+    return total + (elegivel ? item.total * percentual / 100 : 0);
+  }, 0);
+}
+
 function updateTotal() {
   const subtotal = carrinho.reduce((sum, item) => sum + item.total, 0);
   atualizarDisponibilidadeDesconto();
@@ -2039,14 +2046,14 @@ function updateTotal() {
   let percentual = ehModoCliente ? 0 : parseFloat(campoDesconto?.value || 0);
   if (!Number.isFinite(percentual)) percentual = 0;
   percentual = Math.max(0, Math.min(100, percentual));
-  const valorDesconto = subtotal * percentual / 100;
+  const valorDesconto = calcularDescontoPorProduto(percentual);
   const total = subtotal - valorDesconto;
 
   document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
   const infoDesconto = document.getElementById('total-desconto-info');
   if (infoDesconto) {
     infoDesconto.innerHTML = percentual > 0
-      ? `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')} · Desconto: ${percentual.toFixed(2).replace('.', ',')}% (- R$ ${valorDesconto.toFixed(2).replace('.', ',')})`
+      ? `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')} · Desconto nos produtos com 10+ un.: ${percentual.toFixed(2).replace('.', ',')}% (- R$ ${valorDesconto.toFixed(2).replace('.', ',')})`
       : '';
   }
   
@@ -2186,15 +2193,21 @@ function finalizarVenda() {
   if (descontoPercentual > 0 && !possuiProdutoCom10Unidades) {
     return toast('O desconto só é liberado para pelo menos 10 unidades do mesmo produto');
   }
-  const descontoValor = subtotal * descontoPercentual / 100;
+  const descontoValor = calcularDescontoPorProduto(descontoPercentual);
   const totalGeral = subtotal - descontoValor;
+  const produtosComDesconto = carrinho.map(item => {
+    const descontoItem = Number(item.quantidade) >= 10
+      ? item.total * descontoPercentual / 100
+      : 0;
+    return { ...item, descontoValor: descontoItem, totalComDesconto: item.total - descontoItem };
+  });
 
   const novaVenda = {
     id: Date.now().toString(),
     clienteId: clienteId,
     clienteNome: cliente.nome,
     clienteEndereco: cliente.endereco || '',
-    produtos: [...carrinho],
+    produtos: produtosComDesconto,
     pagamento: pagamentoSelecionado,
     encomenda: ehEncomenda,
     dataEntrega: ehEncomenda ? dataEntrega : null,
@@ -2255,6 +2268,7 @@ function visualizarComprovante(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.descontoValor > 0) texto += `   🏷️ Desconto neste produto: - R$ ${p.descontoValor.toFixed(2).replace('.', ',')} | Total: R$ ${p.totalComDesconto.toFixed(2).replace('.', ',')}\n`;
     if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
@@ -2283,6 +2297,7 @@ function imprimirVendaManual(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.descontoValor > 0) texto += `   🏷️ Desconto neste produto: - R$ ${p.descontoValor.toFixed(2).replace('.', ',')} | Total: R$ ${p.totalComDesconto.toFixed(2).replace('.', ',')}\n`;
     if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
@@ -2358,6 +2373,7 @@ function compartilharComprovante(venda) {
   
   venda.produtos.forEach(p => {
     texto += `${p.quantidade}x ${p.produtoNome} - R$ ${p.total.toFixed(2).replace('.', ',')}\n`;
+    if (p.descontoValor > 0) texto += `   🏷️ Desconto neste produto: - R$ ${p.descontoValor.toFixed(2).replace('.', ',')} | Total: R$ ${p.totalComDesconto.toFixed(2).replace('.', ',')}\n`;
     if (p.entrega) texto += `📅 Encomenda para ${p.entrega}\n`;
   });
   
