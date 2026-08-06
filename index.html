@@ -374,17 +374,28 @@
     right: 20px;
     background: #27AE60;
     color: white;
-    padding: 12px 20px;
-    border-radius: 50px;
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border-radius: 50%;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     z-index: 1000;
     cursor: pointer;
     display: none; /* Inicia escondido */
     align-items: center;
-    gap: 10px;
-    font-weight: bold;
+    justify-content: center;
+    font-size: 1.7rem;
     border: 2px solid white;
     animation: slideIn 0.3s ease-out;
+  }
+  /* Na visão cliente, o acesso fica no canto superior e mostra somente o ícone */
+  .modo-cliente #floating-cart {
+    top: 14px;
+    right: 14px;
+    bottom: auto;
+  }
+  .modo-cliente #floating-cart-total {
+    display: none;
   }
   @keyframes slideIn {
     from { transform: translateY(100px); opacity: 0; }
@@ -443,9 +454,9 @@
 </header>
 
 <!-- Carrinho Flutuante para Clientes -->
-<div id="floating-cart" onclick="showTab('venda')">
-  <span>🛒 Ver Carrinho</span>
-  <span id="floating-cart-total" style="background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 10px;">R$ 0,00</span>
+<div id="floating-cart" onclick="showTab('venda')" title="Visualizar carrinho" aria-label="Visualizar carrinho">
+  <span aria-hidden="true">🛒</span>
+  <span id="floating-cart-total" style="display: none;">R$ 0,00</span>
 </div>
 
 <div id="view-pagamento">
